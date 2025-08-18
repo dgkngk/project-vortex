@@ -1,0 +1,6 @@
+venv/
+.ropeproject/
+.logs
+*cache*
+.zed
+.env
