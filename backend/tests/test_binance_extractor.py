@@ -73,3 +73,23 @@ def test_run_extraction(mock_get, extractor):
     assert float(results["BTCUSDT"]["price"]) == 50000.00
     assert "ETHUSDT" in results
     assert mock_get.call_count == 2
+
+@pytest.mark.contract
+def test_binance_extractor_contract():
+    extractor = BinanceExtractor()
+
+    # 🔹 1. Test asset listing
+    assets = extractor.get_listed_assets()
+    assert isinstance(assets, list)
+    assert len(assets) > 0
+
+    # Pick first 2 assets for contract testing
+    sample_assets = [a for a in assets[:2]]
+
+    # 🔹 2. Test latest ticker data
+    latest_data = extractor.get_latest_data_for_assets([n["id"] for n in sample_assets])
+    assert isinstance(latest_data, dict)
+
+    # 🔹 3. Test run_extraction() integration
+    results = extractor.run_extraction()
+    assert isinstance(results, dict)

@@ -3,6 +3,8 @@ from typing import List, Dict, Any
 from backend.etl.extractors.BaseExtractor import BaseExtractor
 from backend.core.Config import AppConfig
 from backend.core.VortexLogger import VortexLogger
+from backend.core.enums.ExchangeEnums import Exchange
+from backend.core.enums.BinanceEnums import SymbolStatus, AccountPermissions
 
 
 class BinanceExtractor(BaseExtractor):
@@ -22,17 +24,44 @@ class BinanceExtractor(BaseExtractor):
 
         self.api_key = self.config.binance_api_key
         self.api_secret = self.config.binance_api_secret
+        self.exchange = Exchange.BINANCE.value
 
     def get_listed_assets(self) -> List[Dict[str, Any]]:
         try:
             url = f"{self.api_base_url}/api/v3/exchangeInfo"
             resp = requests.get(url)
             resp.raise_for_status()
-            data = resp.json()
-            return data.get("symbols", [])
+            data = []
+
+            for symbol_data in resp.json().get("symbols", []):
+                if (
+                    symbol_data["status"] == SymbolStatus.TRADING.value and
+                    symbol_data["isSpotTradingAllowed"]
+                    ):
+                    data.append({
+                        "id": symbol_data["symbol"],
+                        "name": symbol_data["symbol"],
+                        "type": "crypto",
+                        "exchange": "Binance",
+                        "base_asset": symbol_data["baseAsset"],
+                        "quote_asset": symbol_data["quoteAsset"],
+                        
+                    })
+
+            return data
         except Exception as e:
             self.logger.exception(f"Error fetching listed assets: {e}")
             return []
+
+    def get_all_exchange_info(self) -> Dict[str, Any]:
+        try:
+            url = f"{self.api_base_url}/api/v3/exchangeInfo"
+            resp = requests.get(url)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            self.logger.exception(f"Error fetching exchange info: {e}")
+            return {}
 
     def get_historical_data_for_assets(self, asset_ids: List[str], interval="1d", limit=100, **kwargs) -> Dict[str, Any]:
         results = {}
