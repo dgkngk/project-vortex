@@ -1,4 +1,8 @@
 import requests
+import asyncio 
+import aiohttp
+import json
+
 from typing import List, Dict, Any
 from backend.etl.extractors.BaseExtractor import BaseExtractor
 from backend.core.Config import AppConfig
@@ -25,6 +29,8 @@ class BinanceExtractor(BaseExtractor):
         self.api_key = self.config.binance_api_key
         self.api_secret = self.config.binance_api_secret
         self.exchange = Exchange.BINANCE.value
+        self.async_loop = asyncio.get_event_loop()
+        self.async_session = aiohttp.ClientSession(loop=self.async_loop)
 
     def get_listed_assets(self) -> List[Dict[str, Any]]:
         try:
@@ -90,17 +96,22 @@ class BinanceExtractor(BaseExtractor):
         return results
 
     def get_latest_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
-        results = {}
-        for symbol in asset_ids:
-            try:
-                url = f"{self.api_base_url}/api/v3/ticker/price"
-                params = {"symbol": symbol}
-                resp = requests.get(url, params=params)
-                resp.raise_for_status()
-                results[symbol] = resp.json()
-            except Exception as e:
-                self.logger.exception(f"Error fetching latest price for {symbol}: {e}")
-        return results
+        result = {}
+        all_tickers = self.get_all_ticker_price()
+        result = {a: all_tickers[a] if all_tickers[a] else "Not Found" for a in asset_ids}
+        return result
+    
+    def get_all_ticker_price(self, **kwargs) -> Dict[str, Any]:
+        result = {}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/price" 
+            resp = requests.get(url)
+            resp.raise_for_status()
+            json_list = resp.json()
+            result = {a["symbol"]:a["price"] for a in json_list}
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest prices: {e}")
+        return result
 
     def run_extraction(self):
         """
