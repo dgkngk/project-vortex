@@ -9,6 +9,7 @@ from backend.core.Config import AppConfig
 from backend.core.VortexLogger import VortexLogger
 from backend.core.enums.ExchangeEnums import Exchange
 from backend.core.enums.BinanceEnums import SymbolStatus, AccountPermissions
+from backend.core.enums.AssetEnums import DataIntervals
 
 
 class BinanceExtractor(BaseExtractor):
@@ -72,8 +73,8 @@ class BinanceExtractor(BaseExtractor):
     def get_historical_data_for_assets(self, asset_ids: List[str], interval="1d", limit=100, **kwargs) -> Dict[str, Any]:
         results = {}
         for symbol in asset_ids:
+            url = f"{self.api_base_url}/api/v3/klines"
             try:
-                url = f"{self.api_base_url}/api/v3/klines"
                 params = {"symbol": symbol, "interval": interval, "limit": limit}
                 resp = requests.get(url, params=params)
                 resp.raise_for_status()
@@ -82,23 +83,42 @@ class BinanceExtractor(BaseExtractor):
                 self.logger.exception(f"Error fetching historical data for {symbol}: {e}")
         return results
 
-    def get_market_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
-        results = {}
-        for symbol in asset_ids:
-            try:
-                url = f"{self.api_base_url}/api/v3/ticker/24hr"
-                params = {"symbol": symbol}
-                resp = requests.get(url, params=params)
-                resp.raise_for_status()
-                results[symbol] = resp.json()
-            except Exception as e:
-                self.logger.exception(f"Error fetching market data for {symbol}: {e}")
-        return results
+    def get_latest_market_data_for_all_assets_24hr(self, **kwargs) -> Dict[str, Any]:
+        result = {}
+        url = f"{self.api_base_url}/api/v3/ticker/24hr"
+        try:
+            resp = requests.get(url)
+            resp.raise_for_status()
+            result = resp.json()
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest market data: {e}")
+        return result
+    
+    def get_market_data_for_assets(self, asset_ids: List[str], windowSize: DataIntervals = DataIntervals.ONE_DAY, **kwargs) -> Dict[str, Any]:
+        """ OHLC single window for given assets and windowsSize. Weight is 4 per asset_id. Max len(asset_ids)=100"""
+        result = {}
+        url = f"{self.api_base_url}/api/v3/ticker"
+        
+        try:
+            params = {"symbols":json.dumps(asset_ids).replace(" ", ""), "windowSize":windowSize.value}
+            resp = requests.get(url, params)
+            resp.raise_for_status()
+            result = {a["symbol"]: a for a in resp.json()}
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest market data for {asset_ids}: {e}")
+
+        return result
 
     def get_latest_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
         result = {}
-        all_tickers = self.get_all_ticker_price()
-        result = {a: all_tickers[a] if all_tickers[a] else "Not Found" for a in asset_ids}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/price" 
+            params = {"symbols":json.dumps(asset_ids).replace(" ", "")}
+            resp = requests.get(url, params)
+            resp.raise_for_status()
+            result = {a["symbol"]: a["price"] for a in resp.json()}
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest prices: {e}")
         return result
     
     def get_all_ticker_price(self, **kwargs) -> Dict[str, Any]:

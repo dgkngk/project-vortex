@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
+from backend.core.enums.AssetEnums import DataIntervals
 from backend.etl.extractors.BinanceExtractor import BinanceExtractor
 
 
@@ -90,6 +91,9 @@ def test_binance_extractor_contract():
     latest_data = extractor.get_latest_data_for_assets([n["id"] for n in sample_assets])
     assert isinstance(latest_data, dict)
 
-    # 🔹 3. Test run_extraction() integration
+    market_data = extractor.get_market_data_for_assets([n["id"] for n in sample_assets], DataIntervals.ONE_DAY)
+    assert isinstance(market_data, dict)
+
+    # 🔹 Test run_extraction() integration
     results = extractor.run_extraction()
     assert isinstance(results, dict)
