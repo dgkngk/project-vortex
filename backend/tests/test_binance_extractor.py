@@ -94,6 +94,25 @@ def test_binance_extractor_contract():
     market_data = extractor.get_market_data_for_assets([n["id"] for n in sample_assets], DataIntervals.ONE_DAY)
     assert isinstance(market_data, dict)
 
+    historical_data = extractor.get_historical_data_for_assets([n["id"] for n in sample_assets], DataIntervals.ONE_DAY)
+    assert isinstance(historical_data, dict)
+
+    # 🔹 5. Test trades data
+    trades_data = extractor.get_trades([n["id"] for n in sample_assets])
+    assert isinstance(trades_data, dict)
+
+    # 🔹 6. Test order book data
+    order_book_data = extractor.get_order_book([n["id"] for n in sample_assets])
+    assert isinstance(order_book_data, dict)
+
+    # 🔹 7. Test order book ticker data
+    order_book_ticker_data = extractor.get_order_book_ticker([n["id"] for n in sample_assets])
+    assert isinstance(order_book_ticker_data, dict)
+
+    # 🔹 8. Test full order book ticker data
+    full_order_book_ticker_data = extractor.get_full_order_book_ticker()
+    assert isinstance(full_order_book_ticker_data, dict)
+
     # 🔹 Test run_extraction() integration
     results = extractor.run_extraction()
     assert isinstance(results, dict)

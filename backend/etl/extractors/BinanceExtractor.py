@@ -30,8 +30,6 @@ class BinanceExtractor(BaseExtractor):
         self.api_key = self.config.binance_api_key
         self.api_secret = self.config.binance_api_secret
         self.exchange = Exchange.BINANCE.value
-        self.async_loop = asyncio.get_event_loop()
-        self.async_session = aiohttp.ClientSession(loop=self.async_loop)
 
     def get_listed_assets(self) -> List[Dict[str, Any]]:
         try:
@@ -70,18 +68,121 @@ class BinanceExtractor(BaseExtractor):
             self.logger.exception(f"Error fetching exchange info: {e}")
             return {}
 
-    def get_historical_data_for_assets(self, asset_ids: List[str], interval="1d", limit=100, **kwargs) -> Dict[str, Any]:
+    def get_historical_data_for_assets(self, asset_ids: List[str], interval:DataIntervals = DataIntervals.ONE_DAY, limit=100, **kwargs) -> Dict[str, Any]:
         results = {}
-        for symbol in asset_ids:
-            url = f"{self.api_base_url}/api/v3/klines"
-            try:
-                params = {"symbol": symbol, "interval": interval, "limit": limit}
-                resp = requests.get(url, params=params)
-                resp.raise_for_status()
-                results[symbol] = resp.json()
-            except Exception as e:
-                self.logger.exception(f"Error fetching historical data for {symbol}: {e}")
-        return results
+        
+        async def fetch_all():
+            async with aiohttp.ClientSession() as session:
+                async def fetch_klines(symbol):
+                    url = f"{self.api_base_url}/api/v3/klines"
+                    try:
+                        params = {"symbol": symbol, "interval": interval.value, "limit": limit}
+                        async with session.get(url, params=params) as resp:
+                            resp.raise_for_status()
+                            return symbol, await resp.json()
+                    except Exception as e:
+                        self.logger.exception(f"Error fetching historical data for {symbol}: {e}")
+                        return symbol, None
+                
+                tasks = [fetch_klines(symbol) for symbol in asset_ids]
+                results_list = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                for symbol, data in zip(asset_ids, results_list):
+                    if isinstance(data, Exception):
+                        self.logger.warning(f"Failed to fetch klines for {symbol}: {data}")
+                        continue
+                    if data is not None:
+                        results[symbol] = data
+                return results
+        
+        return asyncio.run(fetch_all())
+
+    def get_trades(self, asset_ids: List[str], limit=500, **kwargs) -> Dict[str, Any]:
+        results = {}
+        
+        async def fetch_all():
+            async with aiohttp.ClientSession() as session:
+                async def fetch_klines(symbol):
+                    url = f"{self.api_base_url}/api/v3/trades"
+                    try:
+                        params = {"symbol": symbol, "limit": limit}
+                        async with session.get(url, params=params) as resp:
+                            resp.raise_for_status()
+                            return symbol, await resp.json()
+                    except Exception as e:
+                        self.logger.exception(f"Error fetching trades data for {symbol}: {e}")
+                        return symbol, None
+                
+                tasks = [fetch_klines(symbol) for symbol in asset_ids]
+                results_list = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                for symbol, data in zip(asset_ids, results_list):
+                    if isinstance(data, Exception):
+                        self.logger.warning(f"Failed to fetch trades for {symbol}: {data}")
+                        continue
+                    if data is not None:
+                        results[symbol] = data
+                return results
+        
+        return asyncio.run(fetch_all())
+    
+    def get_order_book(self, asset_ids: List[str], limit=100, **kwargs) -> Dict[str, Any]:
+        results = {}
+        
+        async def fetch_all():
+            async with aiohttp.ClientSession() as session:
+                async def fetch_request(symbol):
+                    url = f"{self.api_base_url}/api/v3/depth"
+                    try:
+                        params = {"symbol": symbol, "limit": limit}
+                        async with session.get(url, params=params) as resp:
+                            resp.raise_for_status()
+                            return symbol, await resp.json()
+                    except Exception as e:
+                        self.logger.exception(f"Error fetching order book data for {symbol}: {e}")
+                        return symbol, None
+                
+                tasks = [fetch_request(symbol) for symbol in asset_ids]
+                results_list = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                for symbol, data in zip(asset_ids, results_list):
+                    if isinstance(data, Exception):
+                        self.logger.warning(f"Failed to fetch book data for {symbol}: {data}")
+                        continue
+                    if data is not None:
+                        results[symbol] = data
+                return results
+        
+        return asyncio.run(fetch_all())
+
+    def get_order_book_ticker(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
+        result = {}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/bookTicker" 
+            params = {"symbols":json.dumps(asset_ids).replace(" ", "")}
+            resp = requests.get(url, params)
+            resp.raise_for_status()
+            result = {
+                a["symbol"]: {k: v for k, v in a.items() if k != "symbol"}
+                for a in resp.json()
+            }
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest prices: {e}")
+        return result
+
+    def get_full_order_book_ticker(self, **kwargs) -> Dict[str, Any]:
+        result = {}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/bookTicker" 
+            resp = requests.get(url)
+            resp.raise_for_status()
+            result = {
+                a["symbol"]: {k: v for k, v in a.items() if k != "symbol"}
+                for a in resp.json()
+            }
+        except Exception as e:
+            self.logger.exception(f"Error fetching full order book ticker: {e}")
+        return result   
 
     def get_latest_market_data_for_all_assets_24hr(self, **kwargs) -> Dict[str, Any]:
         result = {}
