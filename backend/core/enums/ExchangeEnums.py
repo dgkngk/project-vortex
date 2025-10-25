@@ -1,11 +1,10 @@
 from enum import Enum
 
+
 class Exchange(Enum):
-    BITSTAXX = "BITSTAXX"
     BINANCE = "BINANCE"
     OKX = "OKX"
     GATEIO = "GATEIO"
-    KUOK = "KUOK"
     BINANCETR = "BINANCETR"
     BYBIT = "BYBIT"
     ZIPMEX = "ZIPMEX"
@@ -14,6 +13,5 @@ class Exchange(Enum):
     NASDAQ = "NASDAQ"
     COINBASE = "COINBASE"
     COINGECKO = "COINGECKO"
-    EXCHangenbergerAICHANGE = "EXCHangenbergerAICHANGE"
     EXCHANGESWAP = "EXCHANGESWAP"
     BORSASTANBUL = "BORSASTANBUL"
