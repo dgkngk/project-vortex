@@ -1,19 +1,26 @@
+from typing import Any, Dict, List
+
 import requests
 
-from typing import List, Dict, Any
-from backend.etl.extractors.BaseExtractor import BaseExtractor
+from backend.core.Config import AppConfig
 from backend.core.VortexLogger import VortexLogger
+from backend.etl.extractors.BaseExtractor import BaseExtractor
 
 
 class CoinGeckoExtractor(BaseExtractor):
-
     def __init__(self):
+        self.config = AppConfig()
+        rate_limit_configs = {"default": {"requests_per_hour": 14}}
         super().__init__(
             api_base_url="https://api.coingecko.com/api/v3",
             target_table_name="coingecko_market_data",
-            historical_data_target_table_name="coingecko_historical_data"
+            historical_data_target_table_name="coingecko_historical_data",
+            rate_limit_configs=rate_limit_configs,
+            logger=VortexLogger("CoinGecko Extractor", "INFO"),
         )
-        self.logger = VortexLogger("CoinGecko Extractor", "DEBUG")
+
+        self.key_mode = self.config.coingecko_key_mode
+        self.api_key = self.config.coingecko_api_key
 
     def get_listed_assets(self) -> List[Dict[str, Any]]:
         url = f"{self.api_base_url}/coins/list"
@@ -21,10 +28,18 @@ class CoinGeckoExtractor(BaseExtractor):
         resp.raise_for_status()
         return resp.json()
 
-    def get_historical_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
+    def get_asset_details(self, asset_id: str) -> Dict[str, Any]:
+        url = f"{self.api_base_url}/coins/{asset_id}"
+        resp = requests.get(url)
+        resp.raise_for_status()
+        return resp.json()
+
+    def get_historical_data_for_assets(
+        self, asset_ids: List[str], **kwargs
+    ) -> Dict[str, Any]:
         vs_currency = kwargs.get("vs_currency", "usd")
-        days = kwargs.get("days", 30)                  # default if caller omits
-        interval = kwargs.get("interval")              # optional
+        days = kwargs.get("days", 30)  # default if caller omits
+        interval = kwargs.get("interval")  # optional
 
         results: Dict[str, Any] = {}
         for asset_id in asset_ids:
@@ -37,18 +52,19 @@ class CoinGeckoExtractor(BaseExtractor):
             results[asset_id] = resp.json()
         return results
 
-    def get_market_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
+    def get_market_data_for_assets(
+        self, asset_ids: List[str], **kwargs
+    ) -> Dict[str, Any]:
         url = f"{self.api_base_url}/coins/markets"
-        params = {
-            "vs_currency": "usd",
-            "ids": ",".join(asset_ids)
-        }
+        params = {"vs_currency": "usd", "ids": ",".join(asset_ids)}
         params.update(kwargs)
         resp = requests.get(url, params=params)
         resp.raise_for_status()
         return {asset["id"]: asset for asset in resp.json()}
 
-    def get_latest_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
+    def get_latest_data_for_assets(
+        self, asset_ids: List[str], **kwargs
+    ) -> Dict[str, Any]:
         vs_currency = kwargs.get("vs_currency", "usd")
         url = f"{self.api_base_url}/simple/price"
         params = {
