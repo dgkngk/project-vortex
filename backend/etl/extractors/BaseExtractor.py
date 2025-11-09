@@ -1,9 +1,11 @@
-from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
-import requests
-import aiohttp
 import asyncio
 import time
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Tuple
+
+import aiohttp
+import requests
+
 from backend.core.RateLimiter import RateLimiterManager
 from backend.core.VortexLogger import VortexLogger
 
@@ -112,6 +114,46 @@ class BaseExtractor(ABC):
                     else:
                         raise e
         return None
+
+    async def _fetch_all_async_data(
+        self,
+        requests_with_keys: List[Tuple[str, str, Optional[Dict[str, Any]]]],
+    ) -> Dict[str, Any]:
+        """
+        A generic asynchronous fetcher for multiple requests.
+        """
+        results = {}
+
+        async with aiohttp.ClientSession() as session:
+
+            async def fetch_request(url: str, params: Optional[Dict[str, Any]]):
+                return await self._make_async_request(session, url, params=params)
+
+            tasks = [
+                fetch_request(url, params) for _, url, params in requests_with_keys
+            ]
+            results_list = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for request_info, data in zip(requests_with_keys, results_list):
+                key, url, _ = request_info
+                if isinstance(data, Exception):
+                    self.logger.error(
+                        f"Error fetching data for {key} from {url}: {data}"
+                    )
+                    self.logger.warning(f"Failed to fetch data for {key}: {data}")
+                    continue
+                if data is not None:
+                    results[key] = data
+        return results
+
+    def fetch_all_async_data(
+        self,
+        requests_with_keys: List[Tuple[str, str, Optional[Dict[str, Any]]]],
+    ) -> Dict[str, Any]:
+        """
+        Runs the generic asynchronous fetcher.
+        """
+        return asyncio.run(self._fetch_all_async_data(requests_with_keys))
 
     @abstractmethod
     def get_listed_assets(self) -> List[Dict[str, Any]]:
