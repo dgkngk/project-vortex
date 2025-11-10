@@ -19,14 +19,10 @@ class BaseExtractor(ABC):
     def __init__(
         self,
         api_base_url: str,
-        target_table_name: str,
-        historical_data_target_table_name: str,
         rate_limit_configs: Optional[Dict[str, Dict[str, int]]] = None,
         logger: Optional[VortexLogger] = None,
     ):
         self.api_base_url = api_base_url
-        self.target_table_name = target_table_name
-        self.historical_data_target_table_name = historical_data_target_table_name
         self.logger = logger or VortexLogger(
             name=self.__class__.__name__, level="DEBUG"
         )
