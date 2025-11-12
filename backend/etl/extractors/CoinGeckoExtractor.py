@@ -79,6 +79,82 @@ class CoinGeckoExtractor(BaseExtractor):
             self.logger.exception(f"Error fetching historical data for assets: {e}")
             return {}
 
+    def get_historical_chart_data_range(
+        self, asset_ids: List[str], from_timestamp: int, to_timestamp: int, **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Get historical market data including price, market cap, and 24hr volume
+        within a given date range.
+
+        Args:
+            asset_ids: List of asset identifiers.
+            from_timestamp: The start of the data range (Unix timestamp).
+            to_timestamp: The end of the data range (Unix timestamp).
+            kwargs: Additional request params, e.g., vs_currency.
+
+        Returns:
+            Dictionary keyed by asset id, with historical data.
+        """
+        vs_currency = kwargs.get("vs_currency", "usd")
+
+        requests_with_keys = []
+        for asset_id in asset_ids:
+            url = f"{self.api_base_url}/coins/{asset_id}/market_chart/range"
+            params = {
+                "vs_currency": vs_currency,
+                "from": str(from_timestamp),
+                "to": str(to_timestamp),
+            }
+            params = self._prepare_params(params)
+            requests_with_keys.append((asset_id, url, params))
+
+        try:
+            return self.fetch_all_async_data(requests_with_keys)
+        except Exception as e:
+            self.logger.exception(
+                f"Error fetching historical chart data in range for assets: {e}"
+            )
+            return {}
+
+    def get_ohlc_data_for_assets(
+        self, asset_ids: List[str], days: int, **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Get OHLC data for assets.
+
+        Args:
+            asset_ids: List of asset identifiers.
+            days: Data up to number of days ago. Valid values: 1, 7, 14, 30, 90, 180, 365.
+            kwargs: Additional request params, e.g., vs_currency.
+
+        Returns:
+            Dictionary keyed by asset id, with OHLC data.
+        """
+        vs_currency = kwargs.get("vs_currency", "usd")
+
+        valid_days = [1, 7, 14, 30, 90, 180, 365]
+        if days not in valid_days:
+            self.logger.error(
+                f"Invalid 'days' parameter for OHLC data: {days}. Valid values are: {valid_days}"
+            )
+            return {}
+
+        requests_with_keys = []
+        for asset_id in asset_ids:
+            url = f"{self.api_base_url}/coins/{asset_id}/ohlc"
+            params = {
+                "vs_currency": vs_currency,
+                "days": str(days),
+            }
+            params = self._prepare_params(params)
+            requests_with_keys.append((asset_id, url, params))
+
+        try:
+            return self.fetch_all_async_data(requests_with_keys)
+        except Exception as e:
+            self.logger.exception(f"Error fetching OHLC data for assets: {e}")
+            return {}
+
     def get_market_data_for_assets(
         self, asset_ids: List[str], **kwargs
     ) -> Dict[str, Any]:
