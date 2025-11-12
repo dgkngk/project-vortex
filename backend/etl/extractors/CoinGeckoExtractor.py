@@ -1,6 +1,4 @@
-from typing import Any, Dict, List
-
-import requests
+from typing import Any, Dict, List, Optional
 
 from backend.core.Config import AppConfig
 from backend.core.VortexLogger import VortexLogger
@@ -10,11 +8,10 @@ from backend.etl.extractors.BaseExtractor import BaseExtractor
 class CoinGeckoExtractor(BaseExtractor):
     def __init__(self):
         self.config = AppConfig()
+        # Rate limit is 30 req per min, 10000 per month
         rate_limit_configs = {"default": {"requests_per_hour": 14}}
         super().__init__(
             api_base_url="https://api.coingecko.com/api/v3",
-            target_table_name="coingecko_market_data",
-            historical_data_target_table_name="coingecko_historical_data",
             rate_limit_configs=rate_limit_configs,
             logger=VortexLogger("CoinGecko Extractor", "INFO"),
         )
@@ -22,35 +19,65 @@ class CoinGeckoExtractor(BaseExtractor):
         self.key_mode = self.config.coingecko_key_mode
         self.api_key = self.config.coingecko_api_key
 
+    def _prepare_params(
+        self, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        if params is None:
+            params = {}
+        if self.api_key:
+            key_name = (
+                "x_cg_pro_api_key" if self.key_mode == "pro" else "x_cg_demo_api_key"
+            )
+            params[key_name] = self.api_key
+        return params
+
     def get_listed_assets(self) -> List[Dict[str, Any]]:
         url = f"{self.api_base_url}/coins/list"
-        resp = requests.get(url)
-        resp.raise_for_status()
-        return resp.json()
+        params = self._prepare_params()
+        sync_result = []
+        try:
+            response_data = self._make_sync_request(url, params=params)
+            for data in response_data:
+                one_result = {}
+                one_result[data["id"]] = data
+                sync_result.append(one_result)
+            return sync_result
+        except Exception as e:
+            self.logger.exception(f"Error fetching listed assets: {e}")
+            return []
 
     def get_asset_details(self, asset_id: str) -> Dict[str, Any]:
         url = f"{self.api_base_url}/coins/{asset_id}"
-        resp = requests.get(url)
-        resp.raise_for_status()
-        return resp.json()
+        params = self._prepare_params()
+        try:
+            response_data = self._make_sync_request(url, params=params)
+            return response_data
+        except Exception as e:
+            self.logger.exception(f"Error fetching asset details for {asset_id}: {e}")
+            return {}
 
     def get_historical_data_for_assets(
         self, asset_ids: List[str], **kwargs
     ) -> Dict[str, Any]:
         vs_currency = kwargs.get("vs_currency", "usd")
-        days = kwargs.get("days", 30)  # default if caller omits
-        interval = kwargs.get("interval")  # optional
+        days = kwargs.get("days", 30)
+        interval = kwargs.get("interval")
 
-        results: Dict[str, Any] = {}
+        requests_with_keys = []
         for asset_id in asset_ids:
             url = f"{self.api_base_url}/coins/{asset_id}/market_chart"
-            params = {"vs_currency": vs_currency, "days": days}
+            params = {"vs_currency": vs_currency, "days": str(days)}
             if interval:
                 params["interval"] = interval
-            resp = requests.get(url, params=params)
-            resp.raise_for_status()
-            results[asset_id] = resp.json()
-        return results
+
+            params = self._prepare_params(params)
+            requests_with_keys.append((asset_id, url, params))
+
+        try:
+            return self.fetch_all_async_data(requests_with_keys)
+        except Exception as e:
+            self.logger.exception(f"Error fetching historical data for assets: {e}")
+            return {}
 
     def get_market_data_for_assets(
         self, asset_ids: List[str], **kwargs
@@ -58,9 +85,13 @@ class CoinGeckoExtractor(BaseExtractor):
         url = f"{self.api_base_url}/coins/markets"
         params = {"vs_currency": "usd", "ids": ",".join(asset_ids)}
         params.update(kwargs)
-        resp = requests.get(url, params=params)
-        resp.raise_for_status()
-        return {asset["id"]: asset for asset in resp.json()}
+        params = self._prepare_params(params)
+        try:
+            response_data = self._make_sync_request(url, params=params)
+            return {asset["id"]: asset for asset in response_data}
+        except Exception as e:
+            self.logger.exception(f"Error fetching market data for assets: {e}")
+            return {}
 
     def get_latest_data_for_assets(
         self, asset_ids: List[str], **kwargs
@@ -76,9 +107,12 @@ class CoinGeckoExtractor(BaseExtractor):
             "include_last_updated_at": "true",
         }
         params.update({k: v for k, v in kwargs.items() if k not in params})
-        resp = requests.get(url, params=params)
-        resp.raise_for_status()
-        return resp.json()
+        params = self._prepare_params(params)
+        try:
+            return self._make_sync_request(url, params=params)
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest data for assets: {e}")
+            return {}
 
     def run_extraction(self):
         # Example: get latest data for top 3 coins

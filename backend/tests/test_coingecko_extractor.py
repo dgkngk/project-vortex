@@ -1,5 +1,7 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from backend.etl.extractors.CoinGeckoExtractor import CoinGeckoExtractor
 
 
@@ -82,3 +84,44 @@ def test_get_market_data_for_assets(mock_get, extractor):
     assert "bitcoin" in data
     assert data["bitcoin"]["current_price"] == 50000
     assert mock_get.called
+
+
+@pytest.mark.contract
+def test_coingecko_extractor_contract(extractor):
+    """
+    Contract test for CoinGeckoExtractor.
+    This test makes live calls to the CoinGecko API.
+    """
+    # 1. Test asset listing
+    assets = extractor.get_listed_assets()
+    assert isinstance(assets, list)
+    assert len(assets) > 0, "Should retrieve a list of assets"
+
+    # Use a few well-known assets for the rest of the tests
+    sample_asset_ids = ["bitcoin", "ethereum"]
+
+    # 2. Test getting asset details
+    asset_details = extractor.get_asset_details(sample_asset_ids[0])
+    assert isinstance(asset_details, dict)
+    assert asset_details["id"] == sample_asset_ids[0], (
+        "Details should be for the requested asset"
+    )
+
+    # 3. Test latest data retrieval
+    latest_data = extractor.get_latest_data_for_assets(sample_asset_ids)
+    assert isinstance(latest_data, dict)
+    for asset_id in sample_asset_ids:
+        assert asset_id in latest_data, f"Latest data should contain {asset_id}"
+
+    # 4. Test market data retrieval
+    market_data = extractor.get_market_data_for_assets(sample_asset_ids)
+    assert isinstance(market_data, dict)
+    for asset_id in sample_asset_ids:
+        assert asset_id in market_data, f"Market data should contain {asset_id}"
+
+    # 5. Test historical data retrieval
+    historical_data = extractor.get_historical_data_for_assets(sample_asset_ids, days=7)
+    assert isinstance(historical_data, dict)
+    for asset_id in sample_asset_ids:
+        assert asset_id in historical_data, f"Historical data should contain {asset_id}"
+        assert "prices" in historical_data[asset_id]
