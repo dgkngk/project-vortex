@@ -22,8 +22,6 @@ class BinanceExtractor(BaseExtractor):
 
         super().__init__(
             api_base_url="https://api.binance.com",
-            target_table_name="binance_market_data",
-            historical_data_target_table_name="binance_historical_data",
             rate_limit_configs=rate_limit_configs,
             logger=VortexLogger(name="BinanceExtractor", level="INFO"),
         )
