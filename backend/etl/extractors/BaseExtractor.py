@@ -12,7 +12,7 @@ from backend.core.VortexLogger import VortexLogger
 
 class BaseExtractor(ABC):
     """
-    Abstract base class for all crypto data extractors.
+    Abstract base class for all data extractors.
     Ensures a common interface and structure for specialized extractors.
     """
 
