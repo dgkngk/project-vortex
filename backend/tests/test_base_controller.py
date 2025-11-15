@@ -17,7 +17,6 @@ class TestBaseController(unittest.TestCase):
         mock_extractor_factory.create_extractor.return_value = MagicMock()
         mock_transformer_factory.create_transformer.return_value = MagicMock()
         mock_loader_factory.create_loader.return_value = MagicMock()
-
         extractors_enum = [MagicMock(), MagicMock()]
         transformers_enum = [MagicMock()]
         loaders_enum = [MagicMock(), MagicMock(), MagicMock()]
