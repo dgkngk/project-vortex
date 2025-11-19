@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 import pandas as pd
 
+from backend.core.VortexLogger import VortexLogger
 from backend.etl.transformers.BaseTransformer import BaseTransformer
 
 
@@ -12,6 +13,7 @@ class BinanceHDTransformer(BaseTransformer):
 
     def __init__(self, raw_data: Dict[str, Any]):
         super().__init__(raw_data)
+        self.logger = VortexLogger(name=self.__class__.__name__, level="DEBUG")
 
     def transform(self) -> Dict[str, pd.DataFrame]:
         """
@@ -48,9 +50,10 @@ class BinanceHDTransformer(BaseTransformer):
                 df = self._structure_dataframe(df)
                 if not df.empty:
                     transformed_data[asset_id] = df
-            except Exception:
-                # In a real scenario, we'd log this error.
-                # For now, we'll just skip problematic data.
+            except Exception as e:
+                self.logger.exception(
+                    f"Error transforming data for asset {asset_id}: {e}"
+                )
                 continue
 
         return transformed_data

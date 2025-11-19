@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 import pandas as pd
 import pandas_ta as ta
 
+from backend.core.VortexLogger import VortexLogger
 from backend.etl.transformers.BaseTransformer import BaseTransformer
 
 
@@ -27,6 +28,7 @@ class TATransformer(BaseTransformer):
         """
         super().__init__(raw_data)
         self.indicators = indicators
+        self.logger = VortexLogger(name=self.__class__.__name__, level="DEBUG")
 
     def _calculate_indicators_for_asset(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -56,12 +58,12 @@ class TATransformer(BaseTransformer):
                 indicator_func(append=True)
             except AttributeError:
                 # This allows the process to continue if an invalid indicator is requested
-                print(
-                    f"Warning: Indicator '{indicator_name}' not found in pandas-ta. Skipping."
+                self.logger.warning(
+                    f"Indicator '{indicator_name}' not found in pandas-ta. Skipping."
                 )
             except Exception as e:
-                print(
-                    f"Warning: Error calculating indicator '{indicator_name}': {e}. Skipping."
+                self.logger.exception(
+                    f"Error calculating indicator '{indicator_name}': {e}. Skipping."
                 )
 
         new_columns = list(set(df_copy.columns) - original_columns)
