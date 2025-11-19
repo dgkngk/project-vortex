@@ -66,11 +66,10 @@ def test_ta_transformer_contract(ohlcv_data):
 
         # Check that indicator columns were created.
         # We check for substrings because pandas-ta generates full names (e.g., 'RSI_14').
-        column_names_str = "".join(df.columns)
-        assert "RSI" in column_names_str, "RSI indicator should be present"
-        assert "MACD" in column_names_str, "MACD indicator should be present"
-        assert "BBL" in column_names_str, "Bollinger Bands (lower) should be present"
-        assert "BBU" in column_names_str, "Bollinger Bands (upper) should be present"
+        assert any(c.startswith("RSI") for c in df.columns), "RSI indicator should be present"
+        assert any(c.startswith("MACD") for c in df.columns), "MACD indicator should be present"
+        assert any(c.startswith("BBL") for c in df.columns), "Bollinger Bands (lower) should be present"
+        assert any(c.startswith("BBU") for c in df.columns), "Bollinger Bands (upper) should be present"
 
         # Check that all calculated values are numeric
         for col in df.columns:
