@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import pandas as pd
 import pandas_ta as ta
