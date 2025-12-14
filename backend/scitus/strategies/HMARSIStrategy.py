@@ -27,7 +27,7 @@ class HMARSIStrategy(BaseStrategy):
         """
         super().__init__(config)
         self.close_col = self.config.get("close_col", "close")
-        self.hma_col = self.config.get("hma_col", "HMA_50")
+        self.hma_col = self.config.get("hma_col", "HMA_10")
         self.rsi_col = self.config.get("rsi_col", "RSI_14")
         self.rsi_hma_period = self.config.get("rsi_hma_period", 14)
         self.rsi_buy_threshold = self.config.get("rsi_buy_threshold", 40)

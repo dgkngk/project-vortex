@@ -3,6 +3,11 @@ from typing import Any, Dict, Type
 
 from backend.core.enums.StrategyConfigs import StrategyConfigs
 from backend.scitus.BaseStrategy import BaseStrategy
+from backend.scitus.strategies.BollingerBandsStrategy import BollingerBandsStrategy
+from backend.scitus.strategies.HMARSIStrategy import HMARSIStrategy
+from backend.scitus.strategies.MACDStrategy import MACDStrategy
+from backend.scitus.strategies.StochRSIStrategy import StochRSIStrategy
+from backend.scitus.strategies.VWAPStrategy import VWAPStrategy
 
 
 class StrategyFactory:
@@ -10,7 +15,13 @@ class StrategyFactory:
     Factory class to create trading strategies.
     """
 
-    _strategies: Dict[Enum, Type[BaseStrategy]] = {}
+    _strategies: Dict[Enum, Type[BaseStrategy]] = {
+        StrategyConfigs.BOLLINGER_BANDS: BollingerBandsStrategy,
+        StrategyConfigs.STOCHRSI: StochRSIStrategy,
+        StrategyConfigs.MACD: MACDStrategy,
+        StrategyConfigs.VWAP: VWAPStrategy,
+        StrategyConfigs.HMA_RSI: HMARSIStrategy,
+    }
 
     @staticmethod
     def create_strategy(

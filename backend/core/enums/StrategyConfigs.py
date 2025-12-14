@@ -4,9 +4,9 @@ from enum import Enum
 class StrategyConfigs(Enum):
     BOLLINGER_BANDS = {
         "close_col": "close",
-        "bbh_col": "BBH_20_2.0",
-        "bbm_col": "BBM_20_2.0",
-        "bbl_col": "BBL_20_2.0",
+        "bbh_col": "BBU_5_2.0_2.0",
+        "bbm_col": "BBM_5_2.0_2.0",
+        "bbl_col": "BBL_5_2.0_2.0",
         "proximity_factor": 0.05,
     }
     STOCHRSI = {
@@ -24,7 +24,7 @@ class StrategyConfigs(Enum):
     VWAP = {"close_col": "close", "vwap_col": "VWAP_D", "proximity_factor": 0.01}
     HMA_RSI = {
         "close_col": "close",
-        "hma_col": "HMA_50",
+        "hma_col": "HMA_10",
         "rsi_col": "RSI_14",
         "rsi_hma_period": 14,
         "rsi_buy_threshold": 40,

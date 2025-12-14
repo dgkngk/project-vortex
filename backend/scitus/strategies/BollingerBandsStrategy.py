@@ -24,9 +24,9 @@ class BollingerBandsStrategy(BaseStrategy):
         """
         super().__init__(config)
         self.close_col = self.config.get("close_col", "close")
-        self.bbh_col = self.config.get("bbh_col", "BBH_20_2.0")
-        self.bbm_col = self.config.get("bbm_col", "BBM_20_2.0")
-        self.bbl_col = self.config.get("bbl_col", "BBL_20_2.0")
+        self.bbh_col = self.config.get("bbh_col", "BBU_5_2.0_2.0")
+        self.bbm_col = self.config.get("bbm_col", "BBM_5_2.0_2.0")
+        self.bbl_col = self.config.get("bbl_col", "BBL_5_2.0_2.0")
         # Proximity factor as a percentage of the Bollinger Band width
         self.proximity_factor = self.config.get("proximity_factor", 0.05)
 
