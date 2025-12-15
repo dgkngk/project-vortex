@@ -47,6 +47,6 @@ class StrategyTransformer(BaseTransformer):
         """
         transformed_data = self.raw_data.copy()
         for strategy_name, strategy in self.strategies.items():
-            signal_df = strategy.generate_signal(transformed_data)
+            signal_df = strategy.generate_signal(self.raw_data)
             transformed_data[f"{strategy_name.name}_signal"] = signal_df["signal"]
         return transformed_data

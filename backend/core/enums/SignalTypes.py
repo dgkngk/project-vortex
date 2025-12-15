@@ -9,6 +9,3 @@ class SignalTypes(Enum):
     SELL = -1
     STRONG_SELL = -2
     OVERPRICED = -3
-    BULLISH = 1
-    NEUTRAL = 0
-    BEARISH = -1

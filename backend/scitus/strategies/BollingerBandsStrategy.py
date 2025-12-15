@@ -63,7 +63,7 @@ class BollingerBandsStrategy(BaseStrategy):
             SignalTypes.OVERPRICED.value,
         ]
         valuation_signal = np.select(
-            conditions_valuation, choices_valuation, default=SignalTypes.NEUTRAL.value
+            conditions_valuation, choices_valuation, default=SignalTypes.HOLD.value
         )
 
         # Trend signal
@@ -71,9 +71,9 @@ class BollingerBandsStrategy(BaseStrategy):
             (bbh > close) & (close > bbm),
             (close > bbl) & (bbm > close),
         ]
-        choices_trend = [SignalTypes.BULLISH.value, SignalTypes.BEARISH.value]
+        choices_trend = [SignalTypes.BUY.value, SignalTypes.SELL.value]
         trend_signal = np.select(
-            conditions_trend, choices_trend, default=SignalTypes.NEUTRAL.value
+            conditions_trend, choices_trend, default=SignalTypes.HOLD.value
         )
 
         # Combine signals

@@ -52,12 +52,12 @@ class StochRSIStrategy(BaseStrategy):
             SignalTypes.OVERPRICED.value,
         ]
         valuation_signal = np.select(
-            conditions_valuation, choices_valuation, default=SignalTypes.NEUTRAL.value
+            conditions_valuation, choices_valuation, default=SignalTypes.HOLD.value
         )
 
         # Trend signal
         trend_signal = np.where(
-            k >= d, SignalTypes.BULLISH.value, SignalTypes.BEARISH.value
+            k >= d, SignalTypes.BUY.value, SignalTypes.SELL.value
         )
 
         # Combine signals

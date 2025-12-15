@@ -47,21 +47,21 @@ class VWAPStrategy(BaseStrategy):
         # Trend signal
         is_bullish = vwap >= close
         trend_signal = np.where(
-            is_bullish, SignalTypes.BULLISH.value, SignalTypes.BEARISH.value
+            is_bullish, SignalTypes.BUY.value, SignalTypes.SELL.value
         )
 
         # Valuation signal
         is_far = abs(vwap - close) > proximity_value
         conditions_valuation = [
-            is_bullish & is_far,  # bullish and far -> overpriced
-            ~is_bullish & is_far,  # bearish and far -> underpriced
+            is_bullish & is_far,  # bullish and far -> underpriced
+            ~is_bullish & is_far,  # bearish and far -> overpriced
         ]
         choices_valuation = [
-            SignalTypes.OVERPRICED.value,
             SignalTypes.UNDERPRICED.value,
+            SignalTypes.OVERPRICED.value,
         ]
         valuation_signal = np.select(
-            conditions_valuation, choices_valuation, default=SignalTypes.NEUTRAL.value
+            conditions_valuation, choices_valuation, default=SignalTypes.HOLD.value
         )
 
         # Combine signals

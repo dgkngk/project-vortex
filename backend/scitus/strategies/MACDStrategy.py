@@ -52,12 +52,12 @@ class MACDStrategy(BaseStrategy):
             SignalTypes.UNDERPRICED.value,
         ]
         valuation_signal = np.select(
-            conditions_valuation, choices_valuation, default=SignalTypes.NEUTRAL.value
+            conditions_valuation, choices_valuation, default=SignalTypes.HOLD.value
         )
 
         # Trend signal
         trend_signal = np.where(
-            macd >= macd_s, SignalTypes.BULLISH.value, SignalTypes.BEARISH.value
+            macd >= macd_s, SignalTypes.BUY.value, SignalTypes.SELL.value
         )
 
         # Combine signals

@@ -30,7 +30,9 @@ class TATransformer(BaseTransformer):
         self.logger = VortexLogger(name=self.__class__.__name__, level="DEBUG")
 
         ta_configs = [study.value for study in self.studies]
-        self.study = ta.Study(name="Vortex TA Study", ta=ta_configs)
+        self.study = ta.Study(
+            name="Vortex TA Study", ta=ta_configs, cores=0
+        )  # faster without multiproc
 
     def _calculate_indicators_for_asset(self, df: pd.DataFrame) -> pd.DataFrame:
         """
