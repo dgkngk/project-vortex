@@ -1,0 +1,65 @@
+@startuml
+!theme vibrant
+
+title Data Flow Diagram - Project Vortex
+
+' External Entities
+actor User
+rectangle "Binance API" as BinanceAPI
+rectangle "CoinGecko API" as CoinGeckoAPI
+
+package "Frontend" {
+    (UI)
+}
+
+package "Backend" {
+    (API Gateway\nFastAPI) as APIGateway
+    
+    package "ETL Pipeline" {
+        (Controller) as ETLController
+        (Extractor)
+        (Transformer)
+        (Loader)
+    }
+    
+    package "Strategy Engine" {
+        (Strategy Executor)
+    }
+
+    package "Data Stores" {
+        database PostgreSQL
+        database Redis
+        database InfluxDB
+    }
+}
+
+' Data Flows
+User --> UI : Interacts
+UI --> APIGateway : API Requests
+
+APIGateway --> ETLController : Trigger ETL
+APIGateway --> "Strategy Executor" : Request Analysis
+ETLController --> Extractor : Start Extraction
+Extractor --> BinanceAPI : Fetch Market Data
+Extractor --> CoinGeckoAPI : Fetch Market Data
+BinanceAPI --> Extractor : Raw Market Data
+CoinGeckoAPI --> Extractor : Raw Market Data
+Extractor --> Transformer : Raw Data
+Transformer --> Transformer : Enriched Data
+Transformer --> Loader : Transformed Data
+Loader --> PostgreSQL : Save Structured Data
+Loader --> Redis : Cache Data
+Loader --> InfluxDB : Save Time-Series Data
+
+"Strategy Executor" --> PostgreSQL : Read Historical Data
+"Strategy Executor" --> Redis : Read Cached Data
+"Strategy Executor" --> InfluxDB : Read Time-Series Data
+PostgreSQL --> "Strategy Executor" : Historical Data
+Redis --> "Strategy Executor" : Cached Data
+InfluxDB --> "Strategy Executor" : Time-Series Data
+
+"Strategy Executor" --> APIGateway : Analysis Results
+APIGateway --> UI : Display Results
+UI --> User : Show Information
+
+@enduml
