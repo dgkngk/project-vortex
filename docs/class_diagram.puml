@@ -67,7 +67,7 @@ package "ETL" {
         }
 
         class TATransformer extends BaseTransformer {
-            +indicators: List[str]
+            +studies: List[TAStudies]
             +transform(): Dict[str, pd.DataFrame]
         }
 
