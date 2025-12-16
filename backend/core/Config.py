@@ -16,5 +16,6 @@ class AppConfig(BaseSettings):
     postgres_dsn: Optional[str] = None
     redis_url: Optional[str] = None
     influx_url: Optional[str] = None
+    cache_type: str = "local"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
