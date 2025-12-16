@@ -14,7 +14,7 @@ class AppConfig(BaseSettings):
 
     # Database / Infra
     postgres_dsn: Optional[str] = None
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: Optional[str] = None
     influx_url: Optional[str] = None
     cache_type: str = "local"
 

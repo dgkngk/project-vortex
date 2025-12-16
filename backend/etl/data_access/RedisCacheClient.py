@@ -1,6 +1,8 @@
-import pickle
+import json
+import io
 from typing import Any, Optional
 
+import pandas as pd
 import redis
 
 from backend.core.VortexLogger import VortexLogger
@@ -11,8 +13,8 @@ class RedisCacheClient(BaseCacheClient):
     """
     A cache client that uses a Redis server as the backend.
 
-    This client serializes data using pickle and leverages Redis's built-in
-    support for time-to-live (TTL) key expiration.
+    This client serializes data using JSON, with special handling for pandas DataFrames,
+    and leverages Redis's built-in support for time-to-live (TTL) key expiration.
     """
 
     def __init__(self, redis_url: str, logger: Optional[VortexLogger] = None):
@@ -40,6 +42,7 @@ class RedisCacheClient(BaseCacheClient):
     def get(self, key: str) -> Optional[Any]:
         """
         Retrieves and deserializes an item from the Redis cache.
+        It handles JSON serialized data, including pandas DataFrames.
 
         Args:
             key: The key of the item to retrieve.
@@ -53,15 +56,26 @@ class RedisCacheClient(BaseCacheClient):
         try:
             cached_value = self.client.get(key)
             if cached_value:
-                return pickle.loads(cached_value)
+                wrapper_payload = json.loads(cached_value)
+                payload_type = wrapper_payload.get("_type")
+                payload_data = wrapper_payload.get("data")
+
+                if payload_type == "dataframe":
+                    return pd.read_json(io.StringIO(payload_data), orient='split')
+                elif payload_type == "other":
+                    return payload_data  # No need to json.loads again, it's already an object
+                else:
+                    self.logger.warning(f"Unknown payload type '{payload_type}' for key '{key}'. Returning raw data.")
+                    return payload_data
             return None
-        except (redis.RedisError, pickle.UnpicklingError) as e:
+        except (redis.RedisError, json.JSONDecodeError, ValueError, TypeError) as e:
             self.logger.error(f"Error getting key '{key}' from Redis: {e}")
             return None
 
     def set(self, key: str, value: Any, time_to_live: Optional[int] = None):
         """
         Serializes and saves an item to the Redis cache.
+        It handles JSON serialization, with special handling for pandas DataFrames.
 
         Args:
             key: The key under which to store the item.
@@ -72,9 +86,19 @@ class RedisCacheClient(BaseCacheClient):
             return
 
         try:
-            serialized_value = pickle.dumps(value)
+            payload_type = "other"
+            payload_data = value
+
+            if isinstance(value, pd.DataFrame):
+                payload_type = "dataframe"
+                payload_data = value.to_json(orient='split')  # Convert DataFrame to JSON string
+
+            # Wrap the payload with type metadata
+            wrapper_payload = {"_type": payload_type, "data": payload_data}
+            serialized_value = json.dumps(wrapper_payload)
+
             self.client.set(key, serialized_value, ex=time_to_live)
-        except (redis.RedisError, pickle.PicklingError) as e:
+        except (redis.RedisError, TypeError, ValueError) as e:
             self.logger.error(f"Error setting key '{key}' in Redis: {e}")
 
     def delete(self, key: str):

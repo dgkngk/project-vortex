@@ -11,6 +11,7 @@ class BaseCacheClient(DataDestinationClient, ABC):
     Abstract base class for cache clients.
     Provides shared logic for cache key generation and a common interface.
     """
+    DEFAULT_CACHE_TTL_SECONDS = 86400
 
     def save_data(self, data: Dict[str, Any]):
         """
@@ -25,7 +26,7 @@ class BaseCacheClient(DataDestinationClient, ABC):
             raise ValueError("Data for caching must include a 'key' and a 'value'.")
 
         # Default TTL of 1 day (in seconds)
-        time_to_live = data.get("time_to_live", 86400)
+        time_to_live = data.get("time_to_live", self.DEFAULT_CACHE_TTL_SECONDS)
         self.set(data["key"], data["value"], time_to_live=time_to_live)
 
     @staticmethod

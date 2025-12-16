@@ -11,3 +11,6 @@ test_plots/
 *.log
 .DS_Store
 .pytest_cache
+
+.gemini/
+gha-creds-*.json

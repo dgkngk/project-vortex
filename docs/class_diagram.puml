@@ -76,7 +76,7 @@ package "ETL" {
             +transform(): pd.DataFrame
         }
 
-class TransformerFactory {
+        class TransformerFactory {
             - _transformers: Dict[Enum, Type[BaseTransformer]]
             + {static} create_transformer(transformer_type: Enum): BaseTransformer
         }

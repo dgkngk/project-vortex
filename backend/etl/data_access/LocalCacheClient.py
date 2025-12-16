@@ -14,6 +14,11 @@ class LocalCacheClient(BaseCacheClient):
 
     This client stores cached items as compressed, pickled files in a local directory.
     It handles time-to-live (TTL) by storing expiration metadata alongside the data.
+
+    SECURITY WARNING: This cache client uses Python's `pickle` module for serialization.
+    Deserializing data from an untrusted source can lead to arbitrary code execution.
+    Ensure that the cache directory (`.cache/data` by default) is secured and only
+    accessible by trusted processes to mitigate this risk.
     """
 
     def __init__(
@@ -32,6 +37,10 @@ class LocalCacheClient(BaseCacheClient):
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.logger = logger or VortexLogger(
             name=self.__class__.__name__, level="DEBUG"
+        )
+        self.logger.warning(
+            "Security Warning: LocalCacheClient uses pickle serialization. "
+            "Ensure the cache directory is secured and not exposed to untrusted inputs."
         )
 
     def _get_file_path(self, key: str) -> Path:
@@ -107,9 +116,9 @@ class LocalCacheClient(BaseCacheClient):
         try:
             with gzip.open(file_path, "wb") as f:
                 pickle.dump(payload, f)
-        except (pickle.PicklingError, OSError):
+        except (pickle.PicklingError, OSError) as e:
             # Handle potential errors during file writing
-            pass
+            self.logger.error(f"Failed to write cache file for key '{key}': {e}")
 
     def delete(self, key: str):
         """

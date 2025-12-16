@@ -37,6 +37,8 @@ class BaseController(ABC):
         settings = AppConfig()
 
         if settings.cache_type.lower() == "redis":
+            if not settings.redis_url:
+                raise ValueError("Redis URL must be provided when cache_type is 'redis'.")
             self.logger.info("Using Redis cache client.")
             self.cache_client: BaseCacheClient = RedisCacheClient(
                 redis_url=settings.redis_url, logger=self.logger
@@ -47,19 +49,19 @@ class BaseController(ABC):
 
         self.extractor_factory = extractor_factory
         self.extractors: List[BaseExtractor] = [
-            self.extractor_factory.create_extractor(e, **self.params)
-            for e in extractors
+            self.extractor_factory.create_extractor(extractor, **self.params)
+            for extractor in extractors
         ]
 
         self.transformer_factory = transformer_factory
         self.transformers: List[BaseTransformer] = [
-            self.transformer_factory.create_transformer(t, **self.params)
-            for t in transformers
+            self.transformer_factory.create_transformer(transformer, **self.params)
+            for transformer in transformers
         ]
 
         self.loader_factory = loader_factory
         self.loaders: List[BaseLoader] = [
-            self.loader_factory.create_loader(l, **self.params) for l in loaders
+            self.loader_factory.create_loader(loader, **self.params) for loader in loaders
         ]
 
     def get_data(self) -> Any:
@@ -80,9 +82,10 @@ class BaseController(ABC):
         transformed_data = self.run_transformations(extracted_data)
         self.run_loaders(transformed_data)
 
-        # Time to live in seconds (e.g., 1 day)
-        # TODO: Make TTL configurable and relative to the request interval
-        time_to_live = self.params.get("time_to_live_seconds", 86400)
+        # Time to live in seconds (defaults to 1 day)
+        time_to_live = self.params.get(
+            "time_to_live_seconds", self.cache_client.DEFAULT_CACHE_TTL_SECONDS
+        )
         self.cache_client.set(cache_key, transformed_data, time_to_live=time_to_live)
         self.logger.info(f"Saved to cache with key {cache_key[:10]}...")
 
