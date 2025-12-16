@@ -14,7 +14,8 @@ class AppConfig(BaseSettings):
 
     # Database / Infra
     postgres_dsn: Optional[str] = None
-    redis_url: Optional[str] = None
+    redis_url: str = "redis://localhost:6379/0"
     influx_url: Optional[str] = None
+    cache_type: str = "local"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

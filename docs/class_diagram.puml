@@ -76,7 +76,7 @@ package "ETL" {
             +transform(): pd.DataFrame
         }
 
-        class TransformerFactory {
+class TransformerFactory {
             - _transformers: Dict[Enum, Type[BaseTransformer]]
             + {static} create_transformer(transformer_type: Enum): BaseTransformer
         }
@@ -91,6 +91,40 @@ package "ETL" {
         class LoaderFactory {
             - _loaders: Dict[Enum, Type[BaseLoader]]
             + {static} create_loader(loader_type: Enum): BaseLoader
+        }
+    }
+
+    package "DataAccess" {
+        abstract class DataDestinationClient {
+            +client: Optional[Any]
+            +save_data(data: Any)
+        }
+
+        abstract class BaseCacheClient extends DataDestinationClient {
+            +save_data(data: Dict[str, Any])
+            +generate_cache_key(params: Dict[str, Any]): str
+            +get(key: str): Any
+            +set(key: str, value: Any, time_to_live: int)
+            +delete(key: str)
+            +exists(key: str): bool
+        }
+
+        class LocalCacheClient extends BaseCacheClient {
+            -cache_dir: Path
+            -logger: VortexLogger
+            -_get_file_path(key: str): Path
+            +get(key: str): Optional[Any]
+            +set(key: str, value: Any, time_to_live: Optional[int])
+            +delete(key: str)
+            +exists(key: str): bool
+        }
+
+        class RedisCacheClient extends BaseCacheClient {
+            -logger: VortexLogger
+            +get(key: str): Optional[Any]
+            +set(key: str, value: Any, time_to_live: Optional[int])
+            +delete(key: str)
+            +exists(key: str): bool
         }
     }
 }
@@ -162,7 +196,7 @@ package "Core" {
 ' Relationships
 BaseController o-- ExtractorFactory
 BaseController o-- TransformerFactory
-BaseController o-- LoaderFactory
+BaseController o-right- LoaderFactory
 BaseController *-- "many" BaseExtractor
 BaseController *-- "many" BaseTransformer
 BaseController *-- "many" BaseLoader
@@ -186,4 +220,9 @@ RateLimiterManager *-- "many" RateLimiter
 BaseExtractor o-- VortexLogger
 BinanceExtractor o-- AppConfig
 CoinGeckoExtractor o-- AppConfig
+
+BaseLoader o-- "many" DataDestinationClient
+DataDestinationClient <|-- BaseCacheClient
+BaseCacheClient <|-- LocalCacheClient
+BaseCacheClient <|-- RedisCacheClient
 @enduml
