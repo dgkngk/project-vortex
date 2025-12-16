@@ -1,7 +1,11 @@
 from enum import Enum
 from typing import Dict, Type
 
+from backend.core.enums.TransformTypes import TransformTypes
 from backend.etl.transformers.BaseTransformer import BaseTransformer
+from backend.etl.transformers.BinanceHDTransformer import BinanceHDTransformer
+from backend.etl.transformers.StrategyTransformer import StrategyTransformer
+from backend.etl.transformers.TATransformer import TATransformer
 
 
 class TransformerFactory:
@@ -9,7 +13,11 @@ class TransformerFactory:
     Factory class to create crypto data transformers.
     """
 
-    _transformers: Dict[Enum, Type[BaseTransformer]] = {}
+    _transformers: Dict[Enum, Type[BaseTransformer]] = {
+        TransformTypes.BINANCEHD_TO_OHLCV: BinanceHDTransformer,
+        TransformTypes.OHLCV_TO_TA: TATransformer,
+        TransformTypes.TA_TO_SIGNAL: StrategyTransformer,
+    }
 
     @staticmethod
     def create_transformer(transformer_type: Enum, **kwargs) -> BaseTransformer:

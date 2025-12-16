@@ -6,7 +6,7 @@ from backend.etl.extractors.BaseExtractor import BaseExtractor
 
 
 class CoinGeckoExtractor(BaseExtractor):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.config = AppConfig()
         # Rate limit is 30 req per min, 10000 per month
         rate_limit_configs = {"default": {"requests_per_hour": 14}}
@@ -14,6 +14,7 @@ class CoinGeckoExtractor(BaseExtractor):
             api_base_url="https://api.coingecko.com/api/v3",
             rate_limit_configs=rate_limit_configs,
             logger=VortexLogger("CoinGecko Extractor", "INFO"),
+            **kwargs,
         )
 
         self.key_mode = self.config.coingecko_key_mode

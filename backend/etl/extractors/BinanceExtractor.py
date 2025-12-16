@@ -14,7 +14,7 @@ class BinanceExtractor(BaseExtractor):
     Extractor implementation for Binance API.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.config = AppConfig()
 
         # Binance API rate limits: 1200 requests per minute.
@@ -24,6 +24,7 @@ class BinanceExtractor(BaseExtractor):
             api_base_url="https://api.binance.com",
             rate_limit_configs=rate_limit_configs,
             logger=VortexLogger(name="BinanceExtractor", level="INFO"),
+            **kwargs,
         )
 
         self.api_key = self.config.binance_api_key
