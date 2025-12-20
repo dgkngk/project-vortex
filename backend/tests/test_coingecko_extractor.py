@@ -24,8 +24,8 @@ def test_get_listed_assets(mock_get, extractor):
 
     assets = extractor.get_listed_assets()
     assert isinstance(assets, list)
-    assert list(assets[0].keys())[0] == "bitcoin"
-    assert assets[1]["ethereum"]["symbol"] == "eth"
+    assert assets[0]["id"] == "bitcoin"
+    assert assets[1]["symbol"] == "eth"
     assert mock_get.called
 
 
@@ -52,23 +52,22 @@ def test_get_latest_data_for_assets(mock_get, extractor):
     assert mock_get.called
 
 
-@patch("requests.get")
+@patch("backend.etl.extractors.CoinGeckoExtractor.CoinGeckoExtractor.fetch_all_async_data")
 @pytest.mark.unit
-def test_get_historical_data_for_assets(mock_get, extractor):
-    mock_response = MagicMock()
-    mock_response.json.return_value = {
-        "prices": [[1618910000, 50000], [1618913600, 50500]],
-        "market_caps": [[1618910000, 1000000000]],
-        "total_volumes": [[1618910000, 20000000]],
+def test_get_historical_data_for_assets(mock_fetch_async, extractor):
+    mock_fetch_async.return_value = {
+        "bitcoin": {
+            "prices": [[1618910000, 50000], [1618913600, 50500]],
+            "market_caps": [[1618910000, 1000000000]],
+            "total_volumes": [[1618910000, 20000000]],
+        }
     }
-    mock_response.raise_for_status = lambda: None
-    mock_get.return_value = mock_response
 
     data = extractor.get_historical_data_for_assets(["bitcoin"], days=1)
     assert "bitcoin" in data
     assert "prices" in data["bitcoin"]
     assert isinstance(data["bitcoin"]["prices"], list)
-    assert mock_get.called
+    assert mock_fetch_async.called
 
 
 @patch("requests.get")

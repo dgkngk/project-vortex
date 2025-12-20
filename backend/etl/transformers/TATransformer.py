@@ -15,7 +15,7 @@ class TATransformer(BaseTransformer):
     It takes a dictionary of dataframes and applies a list of TAStudies concurrently.
     """
 
-    def __init__(self, raw_data: Dict[str, pd.DataFrame], studies: List[TAStudies]):
+    def __init__(self, raw_data: Dict[str, pd.DataFrame], studies: List[TAStudies], **kwargs):
         """
         Initializes the TATransformer.
 

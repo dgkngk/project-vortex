@@ -18,4 +18,4 @@ class AppConfig(BaseSettings):
     influx_url: Optional[str] = None
     cache_type: str = "local"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")

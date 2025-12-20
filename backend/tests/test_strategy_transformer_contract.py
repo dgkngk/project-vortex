@@ -71,9 +71,9 @@ def test_strategy_transformer_contract(ta_data):
             print(f"Skipping {asset_id} due to empty data from TATransformer.")
             continue
         strategy_transformer = StrategyTransformer(
-            raw_data=df, strategies_config=strategies_config
+            raw_data={asset_id: df}, strategies_config=strategies_config
         )
-        signal_data[asset_id] = strategy_transformer.transform()
+        signal_data[asset_id] = strategy_transformer.transform()[asset_id]
 
     # 3. Assert the results
     assert signal_data, "Signal generation should return data"
