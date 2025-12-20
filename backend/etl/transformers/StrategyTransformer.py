@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 import pandas as pd
 
+from backend.core.VortexLogger import VortexLogger
 from backend.core.enums.StrategyConfigs import StrategyConfigs
 from backend.etl.transformers.BaseTransformer import BaseTransformer
 from backend.scitus.BaseStrategy import BaseStrategy
@@ -29,6 +30,7 @@ class StrategyTransformer(BaseTransformer):
                                and values are configuration dictionaries for each strategy.
         """
         super().__init__(raw_data)
+        self.logger = VortexLogger(name=self.__class__.__name__, level="DEBUG")
         self.strategies: Dict[StrategyConfigs, BaseStrategy] = {}
         for strategy_name, config in strategies_config.items():
             self.strategies[strategy_name] = StrategyFactory.create_strategy(
@@ -47,6 +49,7 @@ class StrategyTransformer(BaseTransformer):
         
         if not isinstance(self.raw_data, dict):
              # Fallback if somehow a single DF is passed (though not expected in this pipeline)
+             self.logger.warning("raw_data is not a dict, strategies will not be applied.")
              return self.raw_data
              
         for asset_id, df in self.raw_data.items():
@@ -70,7 +73,7 @@ class StrategyTransformer(BaseTransformer):
                         df_copy[f"{strategy_name.name}_signal"] = signal_df["signal"]
                 except Exception as e:
                     # Log error but continue
-                    print(f"Error applying strategy {strategy_name} for asset {asset_id}: {e}")
+                    self.logger.error(f"Error applying strategy {strategy_name} for asset {asset_id}: {e}")
                     continue
             
             transformed_data[asset_id] = df_copy

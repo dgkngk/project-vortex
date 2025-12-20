@@ -44,14 +44,12 @@ class CryptoController(CronableController):
         self.asset_ids = asset_ids
 
     def _get_interval_from_mode(self) -> DataIntervals:
-        if self.extraction_mode == ExtractionMode.DAILY:
-            return DataIntervals.ONE_DAY
-        elif self.extraction_mode == ExtractionMode.HOURLY:
-            return DataIntervals.ONE_HOUR
-        elif self.extraction_mode == ExtractionMode.MINUTELY:
-            return DataIntervals.ONE_MINUTE
-        # Default or fallback
-        return DataIntervals.ONE_DAY
+        mode_to_interval = {
+            ExtractionMode.DAILY: DataIntervals.ONE_DAY,
+            ExtractionMode.HOURLY: DataIntervals.ONE_HOUR,
+            ExtractionMode.MINUTELY: DataIntervals.ONE_MINUTE,
+        }
+        return mode_to_interval.get(self.extraction_mode, DataIntervals.ONE_DAY)
 
     def run_extractions(self) -> Any:
         self.logger.info(
@@ -63,11 +61,13 @@ class CryptoController(CronableController):
         for extractor in self.extractors:
             try:
                 # Attempt to extract historical data with the interval
+                limit = self.params.get("limit", 100)
+                days = self.params.get("days", 1)
                 data = extractor.get_historical_data_for_assets(
                     asset_ids=self.asset_ids,
                     interval=interval,
-                    limit=100,  # Reasonable default
-                    days=1,  # Reasonable default for CoinGecko
+                    limit=limit,
+                    days=days,
                 )
                 if data:
                     extracted_data.update(data)

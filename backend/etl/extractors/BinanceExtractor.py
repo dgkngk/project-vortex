@@ -198,7 +198,8 @@ class BinanceExtractor(BaseExtractor):
             self.logger.warning("No assets retrieved from Binance.")
             return
 
-        asset_ids = [a["symbol"] for a in assets[:5]]  # Limit for demo
+        asset_ids = [a["id"] for a in assets[:5]]  # Limit for demo
         latest_data = self.get_latest_data_for_assets(asset_ids)
         self.logger.info(f"Extracted latest data for {len(asset_ids)} assets.")
         self.logger.info(f"{latest_data}")
+        return latest_data

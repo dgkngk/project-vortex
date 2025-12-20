@@ -15,8 +15,8 @@ def test_get_listed_assets(mock_get, extractor):
     mock_response = MagicMock()
     mock_response.json.return_value = {
         "symbols": [
-            {"symbol": "BTCUSDT"},
-            {"symbol": "ETHUSDT"},
+            {"symbol": "BTCUSDT", "status": "TRADING", "isSpotTradingAllowed": True, "baseAsset": "BTC", "quoteAsset": "USDT"},
+            {"symbol": "ETHUSDT", "status": "TRADING", "isSpotTradingAllowed": True, "baseAsset": "ETH", "quoteAsset": "USDT"},
         ]
     }
     mock_response.raise_for_status = lambda: None
@@ -24,8 +24,8 @@ def test_get_listed_assets(mock_get, extractor):
 
     assets = extractor.get_listed_assets()
     assert isinstance(assets, list)
-    assert assets[0]["symbol"] == "BTCUSDT"
-    assert assets[1]["symbol"] == "ETHUSDT"
+    assert assets[0]["id"] == "BTCUSDT"
+    assert assets[1]["id"] == "ETHUSDT"
     assert mock_get.called
 
 
@@ -42,7 +42,7 @@ def test_get_latest_data_for_assets(mock_get, extractor):
 
     data = extractor.get_latest_data_for_assets(["BTCUSDT", "ETHUSDT"])
     assert "BTCUSDT" in data
-    assert float(data["BTCUSDT"]["price"]) == 50000.00
+    assert float(data["BTCUSDT"]) == 50000.00
     assert "ETHUSDT" in data
     assert mock_get.called
 
@@ -53,7 +53,10 @@ def test_run_extraction(mock_get, extractor):
     # Mock assets list
     mock_assets_response = MagicMock()
     mock_assets_response.json.return_value = {
-        "symbols": [{"symbol": "BTCUSDT"}, {"symbol": "ETHUSDT"}]
+        "symbols": [
+            {"symbol": "BTCUSDT", "status": "TRADING", "isSpotTradingAllowed": True, "baseAsset": "BTC", "quoteAsset": "USDT"},
+            {"symbol": "ETHUSDT", "status": "TRADING", "isSpotTradingAllowed": True, "baseAsset": "ETH", "quoteAsset": "USDT"}
+        ]
     }
     mock_assets_response.raise_for_status = lambda: None
 
@@ -71,7 +74,7 @@ def test_run_extraction(mock_get, extractor):
     results = extractor.run_extraction()
     assert isinstance(results, dict)
     assert "BTCUSDT" in results
-    assert float(results["BTCUSDT"]["price"]) == 50000.00
+    assert float(results["BTCUSDT"]) == 50000.00
     assert "ETHUSDT" in results
     assert mock_get.call_count == 2
 

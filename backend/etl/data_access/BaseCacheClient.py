@@ -1,6 +1,7 @@
 import hashlib
 import json
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any, Dict
 
 from backend.etl.data_access.DataDestinationClient import DataDestinationClient
@@ -47,7 +48,7 @@ class BaseCacheClient(DataDestinationClient, ABC):
                 for k, v in obj.items():
                     key_str = (
                         k.name
-                        if hasattr(k, "name")
+                        if isinstance(k, Enum)
                         else str(k)
                     )
                     new_dict[key_str] = convert_keys(v)

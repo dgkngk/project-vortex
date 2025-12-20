@@ -76,6 +76,7 @@ class TestCryptoControllerContract(unittest.TestCase):
         # Assertions
         self.assertIsInstance(final_data, dict)
         self.assertIn("BTCUSDT", final_data)
+        self.assertIsInstance(final_data["BTCUSDT"], pd.DataFrame)
         
         df = final_data["BTCUSDT"]
         self.assertFalse(df.empty)
