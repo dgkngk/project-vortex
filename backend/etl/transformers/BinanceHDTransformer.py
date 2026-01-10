@@ -11,7 +11,7 @@ class BinanceHDTransformer(BaseTransformer):
     Transforms raw Binance historical k-line data into a structured pandas DataFrame.
     """
 
-    def __init__(self, raw_data: Dict[str, Any]):
+    def __init__(self, raw_data: Dict[str, Any], **kwargs):
         super().__init__(raw_data)
         self.logger = VortexLogger(name=self.__class__.__name__, level="DEBUG")
 

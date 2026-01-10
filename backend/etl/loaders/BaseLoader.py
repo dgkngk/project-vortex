@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Any, List
 
-from backend.core.DataDestinationClient import DataDestinationClient
+from backend.etl.data_access.DataDestinationClient import DataDestinationClient
 
 
 class BaseLoader(ABC):

@@ -6,14 +6,15 @@ from backend.etl.extractors.BaseExtractor import BaseExtractor
 
 
 class CoinGeckoExtractor(BaseExtractor):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.config = AppConfig()
-        # Rate limit is 30 req per min, 10000 per month
-        rate_limit_configs = {"default": {"requests_per_hour": 14}}
+        # Rate limit is ~10-30 req per min for free tier. using 10 to be safe.
+        rate_limit_configs = {"default": {"requests_per_minute": 10}}
         super().__init__(
             api_base_url="https://api.coingecko.com/api/v3",
             rate_limit_configs=rate_limit_configs,
             logger=VortexLogger("CoinGecko Extractor", "INFO"),
+            **kwargs,
         )
 
         self.key_mode = self.config.coingecko_key_mode
@@ -34,14 +35,8 @@ class CoinGeckoExtractor(BaseExtractor):
     def get_listed_assets(self) -> List[Dict[str, Any]]:
         url = f"{self.api_base_url}/coins/list"
         params = self._prepare_params()
-        sync_result = []
         try:
-            response_data = self._make_sync_request(url, params=params)
-            for data in response_data:
-                one_result = {}
-                one_result[data["id"]] = data
-                sync_result.append(one_result)
-            return sync_result
+            return self._make_sync_request(url, params=params)
         except Exception as e:
             self.logger.exception(f"Error fetching listed assets: {e}")
             return []

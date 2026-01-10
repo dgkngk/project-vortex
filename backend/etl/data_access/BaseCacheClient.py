@@ -1,6 +1,7 @@
 import hashlib
 import json
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any, Dict
 
 from backend.etl.data_access.DataDestinationClient import DataDestinationClient
@@ -40,8 +41,38 @@ class BaseCacheClient(DataDestinationClient, ABC):
         Returns:
             A string representing the SHA-256 hash of the parameters.
         """
+
+        def convert_keys(obj):
+            if isinstance(obj, dict):
+                new_dict = {}
+                for k, v in obj.items():
+                    key_str = (
+                        k.name
+                        if isinstance(k, Enum)
+                        else str(k)
+                    )
+                    new_dict[key_str] = convert_keys(v)
+                return new_dict
+            elif isinstance(obj, list):
+                return [convert_keys(i) for i in obj]
+            elif isinstance(obj, tuple):
+                return tuple(convert_keys(i) for i in obj)
+            return obj
+
+        def default_converter(o):
+            if hasattr(o, "value"):  # Handle Enums
+                return o.value
+            if hasattr(o, "name"):
+                return o.name
+            return str(o)
+
+        # Pre-process params to ensure keys are strings (for sorting)
+        clean_params = convert_keys(params)
+
         # Create a canonical string representation by sorting the keys
-        canonical_string = json.dumps(params, sort_keys=True)
+        canonical_string = json.dumps(
+            clean_params, sort_keys=True, default=default_converter
+        )
 
         # Encode the string to bytes, as hash functions operate on bytes
         encoded_string = canonical_string.encode("utf-8")

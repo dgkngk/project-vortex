@@ -21,6 +21,7 @@ class BaseExtractor(ABC):
         api_base_url: str,
         rate_limit_configs: Optional[Dict[str, Dict[str, int]]] = None,
         logger: Optional[VortexLogger] = None,
+        **kwargs,
     ):
         self.api_base_url = api_base_url
         self.logger = logger or VortexLogger(
