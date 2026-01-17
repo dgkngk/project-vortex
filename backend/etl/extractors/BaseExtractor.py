@@ -12,7 +12,7 @@ from backend.core.VortexLogger import VortexLogger
 
 class BaseExtractor(ABC):
     """
-    Abstract base class for all crypto data extractors.
+    Abstract base class for all data extractors.
     Ensures a common interface and structure for specialized extractors.
     """
 
@@ -21,6 +21,7 @@ class BaseExtractor(ABC):
         api_base_url: str,
         rate_limit_configs: Optional[Dict[str, Dict[str, int]]] = None,
         logger: Optional[VortexLogger] = None,
+        **kwargs,
     ):
         self.api_base_url = api_base_url
         self.logger = logger or VortexLogger(

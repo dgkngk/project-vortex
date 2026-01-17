@@ -1,5 +1,8 @@
-from abc import ABC, abstractmethod
-from typing import Any, Optional
+from abc import ABC
+from typing import Any, List
+
+from backend.etl.data_access.DataDestinationClient import DataDestinationClient
+
 
 class BaseLoader(ABC):
     """
@@ -7,45 +10,14 @@ class BaseLoader(ABC):
     Defines the interface for saving transformed data into various storages.
     """
 
-    def __init__(self):
-        # Placeholders for DB clients
-        self.redis_client: Optional[Any] = None
-        self.influx_client: Optional[Any] = None
-        self.pg_conn: Optional[Any] = None
+    def __init__(self, destinations: List[DataDestinationClient]):
+        self.destinations = destinations
 
-    @abstractmethod
-    def save_to_influx(self, data: Any):
-        """
-        Save data into InfluxDB.
-        Args:
-            data: The transformed data to store.
-        """
-        pass
-
-    @abstractmethod
-    def save_to_redis(self, data: Any):
-        """
-        Save data into Redis.
-        Args:
-            data: The transformed data to store.
-        """
-        pass
-
-    @abstractmethod
-    def save_to_pg(self, data: Any):
-        """
-        Save data into PostgreSQL.
-        Args:
-            data: The transformed data to store.
-        """
-        pass
-
-    @abstractmethod
-    def run_save(self, data: Any, destinations: list[str]):
+    def save_to_destinations(self, data: Any):
         """
         Main method to orchestrate saving to one or more destinations.
         Args:
             data: The transformed data.
-            destinations: List of destination identifiers ["redis", "influx", "pg"]
         """
-        pass
+        for destination in self.destinations:
+            destination.save_data(data)

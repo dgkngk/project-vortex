@@ -1,8 +1,16 @@
 venv/
 .ropeproject/
 .logs
-*cache*
+*pycache*
+*.cache*
 .zed
 .env
 .vscode
 .aider*
+test_plots/
+*.log
+.DS_Store
+.pytest_cache
+
+.gemini/
+gha-creds-*.json

@@ -1,0 +1,228 @@
+@startuml
+!theme vibrant
+skinparam classAttributeIconSize 0
+
+package "ETL" {
+    package "Controllers" {
+        abstract class BaseController {
+            +extractor_factory: ExtractorFactory
+            +extractors: List[BaseExtractor]
+            +transformer_factory: TransformerFactory
+            +transformers: List[BaseTransformer]
+            +loader_factory: LoaderFactory
+            +loaders: List[BaseLoader]
+            +run_extractions()
+            +run_transformations()
+            +run_loaders()
+        }
+
+        class CryptoController extends BaseController {
+            +run_extractions()
+            +run_transformations()
+            +run_loaders()
+        }
+    }
+
+    package "Extractors" {
+        abstract class BaseExtractor {
+            +api_base_url: str
+            +rate_limiter_manager: RateLimiterManager
+            +get_listed_assets(): List[Dict]
+            +get_historical_data_for_assets(asset_ids: List[str]): Dict
+            +get_market_data_for_assets(asset_ids: List[str]): Dict
+            +get_latest_data_for_assets(asset_ids: List[str]): Dict
+            +run_extraction()
+        }
+
+        class BinanceExtractor extends BaseExtractor {
+            +get_listed_assets(): List[Dict]
+            +get_historical_data_for_assets(asset_ids: List[str]): Dict
+            +get_market_data_for_assets(asset_ids: List[str]): Dict
+            +get_latest_data_for_assets(asset_ids: List[str]): Dict
+            +run_extraction()
+        }
+
+        class CoinGeckoExtractor extends BaseExtractor {
+            +get_listed_assets(): List[Dict]
+            +get_historical_data_for_assets(asset_ids: List[str]): Dict
+            +get_market_data_for_assets(asset_ids: List[str]): Dict
+            +get_latest_data_for_assets(asset_ids: List[str]): Dict
+            +run_extraction()
+        }
+
+        class ExtractorFactory {
+            - _extractors: Dict[Enum, Type[BaseExtractor]]
+            + {static} create_extractor(extractor_type: Enum): BaseExtractor
+        }
+    }
+
+    package "Transformers" {
+        abstract class BaseTransformer {
+            +raw_data: Any
+            +transform(): Any
+        }
+
+        class BinanceHDTransformer extends BaseTransformer {
+            +transform(): Dict[str, pd.DataFrame]
+        }
+
+        class TATransformer extends BaseTransformer {
+            +studies: List[TAStudies]
+            +transform(): Dict[str, pd.DataFrame]
+        }
+
+        class StrategyTransformer extends BaseTransformer {
+            +strategies_config: Dict
+            +transform(): pd.DataFrame
+        }
+
+        class TransformerFactory {
+            - _transformers: Dict[Enum, Type[BaseTransformer]]
+            + {static} create_transformer(transformer_type: Enum): BaseTransformer
+        }
+    }
+
+    package "Loaders" {
+        abstract class BaseLoader {
+            +destinations: List[DataDestinationClient]
+            +save_to_destinations(data: Any)
+        }
+
+        class LoaderFactory {
+            - _loaders: Dict[Enum, Type[BaseLoader]]
+            + {static} create_loader(loader_type: Enum): BaseLoader
+        }
+    }
+
+    package "DataAccess" {
+        abstract class DataDestinationClient {
+            +client: Optional[Any]
+            +save_data(data: Any)
+        }
+
+        abstract class BaseCacheClient extends DataDestinationClient {
+            +save_data(data: Dict[str, Any])
+            +generate_cache_key(params: Dict[str, Any]): str
+            +get(key: str): Any
+            +set(key: str, value: Any, time_to_live: int)
+            +delete(key: str)
+            +exists(key: str): bool
+        }
+
+        class LocalCacheClient extends BaseCacheClient {
+            -cache_dir: Path
+            -logger: VortexLogger
+            -_get_file_path(key: str): Path
+            +get(key: str): Optional[Any]
+            +set(key: str, value: Any, time_to_live: Optional[int])
+            +delete(key: str)
+            +exists(key: str): bool
+        }
+
+        class RedisCacheClient extends BaseCacheClient {
+            -logger: VortexLogger
+            +get(key: str): Optional[Any]
+            +set(key: str, value: Any, time_to_live: Optional[int])
+            +delete(key: str)
+            +exists(key: str): bool
+        }
+    }
+}
+
+package "Scitus" {
+    abstract class BaseStrategy {
+        +config: Dict
+        +generate_signal(data: pd.DataFrame): pd.DataFrame
+    }
+
+    class BollingerBandsStrategy extends BaseStrategy {
+        +generate_signal(data: pd.DataFrame): pd.DataFrame
+    }
+
+    class HMARSIStrategy extends BaseStrategy {
+        +generate_signal(data: pd.DataFrame): pd.DataFrame
+    }
+
+    class MACDStrategy extends BaseStrategy {
+        +generate_signal(data: pd.DataFrame): pd.DataFrame
+    }
+
+    class StochRSIStrategy extends BaseStrategy {
+        +generate_signal(data: pd.DataFrame): pd.DataFrame
+    }
+
+    class VWAPStrategy extends BaseStrategy {
+        +generate_signal(data: pd.DataFrame): pd.DataFrame
+    }
+
+    class StrategyFactory {
+        - _strategies: Dict[Enum, Type[BaseStrategy]]
+        + {static} create_strategy(strategy_name: Enum, config_dict: Dict): BaseStrategy
+    }
+}
+
+package "Core" {
+    class AppConfig {
+        +binance_api_key: str
+        +binance_api_secret: str
+        +coingecko_key_mode: str
+        +coingecko_api_key: str
+    }
+
+    class RateLimiter {
+        - rules: List
+        - tokens: Dict
+        - last_refill: Dict
+        + acquire()
+        + async_acquire()
+    }
+    
+    class RateLimiterManager {
+        - limiters: dict
+        + get_limiter(category: str): RateLimiter
+    }
+
+    class VortexLogger {
+        - __logger: logging.Logger
+        + debug(msg: str)
+        + error(msg: str)
+        + info(msg: str)
+        + warning(msg: str)
+        + critical(msg: str)
+        + exception(msg: str)
+    }
+}
+
+' Relationships
+BaseController o-- ExtractorFactory
+BaseController o-- TransformerFactory
+BaseController o-right- LoaderFactory
+BaseController *-- "many" BaseExtractor
+BaseController *-- "many" BaseTransformer
+BaseController *-- "many" BaseLoader
+
+ExtractorFactory ..> BaseExtractor
+TransformerFactory ..> BaseTransformer
+LoaderFactory ..> BaseLoader
+StrategyFactory ..> BaseStrategy
+
+BinanceExtractor --|> BaseExtractor
+CoinGeckoExtractor --|> BaseExtractor
+BinanceHDTransformer --|> BaseTransformer
+TATransformer --|> BaseTransformer
+StrategyTransformer --|> BaseTransformer
+
+StrategyTransformer *-- "many" BaseStrategy
+
+BaseExtractor o-- RateLimiterManager
+RateLimiterManager *-- "many" RateLimiter
+
+BaseExtractor o-- VortexLogger
+BinanceExtractor o-- AppConfig
+CoinGeckoExtractor o-- AppConfig
+
+BaseLoader o-- "many" DataDestinationClient
+DataDestinationClient <|-- BaseCacheClient
+BaseCacheClient <|-- LocalCacheClient
+BaseCacheClient <|-- RedisCacheClient
+@enduml
