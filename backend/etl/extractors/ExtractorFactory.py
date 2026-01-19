@@ -5,6 +5,9 @@ from backend.core.enums.ExchangeEnums import Exchange
 from backend.etl.extractors.BaseExtractor import BaseExtractor
 from backend.etl.extractors.BinanceExtractor import BinanceExtractor
 from backend.etl.extractors.CoinGeckoExtractor import CoinGeckoExtractor
+from backend.etl.extractors.PolygonCryptoExtractor import PolygonCryptoExtractor
+from backend.etl.extractors.PolygonForexExtractor import PolygonForexExtractor
+from backend.etl.extractors.PolygonStockExtractor import PolygonStockExtractor
 
 
 class ExtractorFactory:
@@ -15,6 +18,9 @@ class ExtractorFactory:
     _extractors: Dict[Enum, Type[BaseExtractor]] = {
         Exchange.BINANCE: BinanceExtractor,
         Exchange.COINGECKO: CoinGeckoExtractor,
+        Exchange.POLYGON_STOCK: PolygonStockExtractor,
+        Exchange.POLYGON_CRYPTO: PolygonCryptoExtractor,
+        Exchange.POLYGON_FOREX: PolygonForexExtractor,
     }
 
     @staticmethod

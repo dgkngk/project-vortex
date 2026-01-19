@@ -12,6 +12,9 @@ class AppConfig(BaseSettings):
     coingecko_key_mode: Optional[str] = None
     coingecko_api_key: Optional[str] = None
 
+    # Polygon
+    polygon_api_key: Optional[str] = None
+
     # Database / Infra
     postgres_dsn: Optional[str] = None
     redis_url: Optional[str] = None
