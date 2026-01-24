@@ -20,24 +20,19 @@ class PolygonForexExtractor(PolygonBaseExtractor):
         Fetch a list of available tickers for the forex market.
         """
         try:
-            with self.rate_limiter_manager.get_limiter("default"):
-                tickers = self.client.list_tickers(
-                    market=market, active=active, limit=limit, **kwargs
-                )
+            tickers = self._fetch_paged_tickers(market=market, active=active, total_limit=limit, **kwargs)
             data = []
             for t in tickers:
                 data.append(
                     {
-                        "id": t.ticker,
-                        "name": t.name,
-                        "type": t.type,
-                        "market": t.market,
-                        "active": t.active,
-                        "currency_name": getattr(t, "currency_name", "Unknown"),
+                        "id": t.get("ticker"),
+                        "name": t.get("name"),
+                        "type": t.get("type"),
+                        "market": t.get("market"),
+                        "active": t.get("active"),
+                        "currency_name": t.get("currency_name", "Unknown"),
                     }
                 )
-                if len(data) >= limit:
-                    break
             return data
         except Exception as e:
             self.logger.exception(f"Error fetching listed forex assets from Polygon: {e}")

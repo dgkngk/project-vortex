@@ -20,25 +20,20 @@ class PolygonStockExtractor(PolygonBaseExtractor):
         Fetch a list of available tickers for the stocks market.
         """
         try:
-            with self.rate_limiter_manager.get_limiter("default"):
-                tickers = self.client.list_tickers(
-                    market=market, active=active, limit=limit, **kwargs
-                )
+            tickers = self._fetch_paged_tickers(market=market, active=active, total_limit=limit, **kwargs)
             data = []
             for t in tickers:
                 data.append(
                     {
-                        "id": t.ticker,
-                        "name": t.name,
-                        "type": t.type,
-                        "exchange": getattr(t, "primary_exchange", "Unknown"),
-                        "market": t.market,
-                        "active": t.active,
-                        "currency_name": getattr(t, "currency_name", "USD"),
+                        "id": t.get("ticker"),
+                        "name": t.get("name"),
+                        "type": t.get("type"),
+                        "exchange": t.get("primary_exchange", "Unknown"),
+                        "market": t.get("market"),
+                        "active": t.get("active"),
+                        "currency_name": t.get("currency_name", "USD"),
                     }
                 )
-                if len(data) >= limit:
-                    break
             return data
         except Exception as e:
             self.logger.exception(f"Error fetching listed assets from Polygon: {e}")

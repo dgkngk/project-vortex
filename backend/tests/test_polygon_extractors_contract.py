@@ -14,12 +14,12 @@ def test_polygon_stock_extractor_contract():
     extractor = PolygonStockExtractor()
 
     # 1. Test asset listing
-    assets = extractor.get_listed_assets(limit=5)
+    assets = extractor.get_listed_assets(limit=10000)
     assert isinstance(assets, list)
     assert len(assets) > 0
 
     # Pick first 2 assets
-    sample_assets = [a for a in assets[:2]]
+    sample_assets = [a for a in assets[5000:5002]]
     asset_ids = [n["id"] for n in sample_assets]
 
     # 2. Test latest data
