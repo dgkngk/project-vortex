@@ -8,6 +8,8 @@ from backend.scitus.strategies.HMARSIStrategy import HMARSIStrategy
 from backend.scitus.strategies.MACDStrategy import MACDStrategy
 from backend.scitus.strategies.StochRSIStrategy import StochRSIStrategy
 from backend.scitus.strategies.VWAPStrategy import VWAPStrategy
+from backend.scitus.strategies.VotingStrategy import VotingStrategy
+from backend.scitus.strategies.CompositeStrategy import CompositeStrategy
 
 
 class StrategyFactory:
@@ -21,6 +23,8 @@ class StrategyFactory:
         StrategyConfigs.MACD: MACDStrategy,
         StrategyConfigs.VWAP: VWAPStrategy,
         StrategyConfigs.HMA_RSI: HMARSIStrategy,
+        StrategyConfigs.VOTING: VotingStrategy,
+        StrategyConfigs.COMPOSITE: CompositeStrategy,
     }
 
     @staticmethod
