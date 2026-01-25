@@ -1,0 +1,1717 @@
+## User
+
+[@backtester_implementation_plan.md](file:///Users/dgkngk/workspace/project-vortex/docs/backtester_implementation_plan.md) [@quant_stack_implementation_plan.md](file:///Users/dgkngk/workspace/project-vortex/docs/quant_stack_implementation_plan.md) 
+
+I want you to act as a quant developer/researcher, and point out what this project would need to be useful for quant trading, and how can I use it to create models that generate more than %50 percent better outcomes than simply holding the asset.
+
+Consider the given plans too and evaluate the capability of the system that is currently implemented.
+
+**Tool Call: List the `project-vortex` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/.cache
+project-vortex/.logs
+project-vortex/.pytest_cache
+project-vortex/.ropeproject
+project-vortex/.zed
+project-vortex/__pycache__
+project-vortex/backend
+project-vortex/docs
+project-vortex/frontend
+
+# Files:
+project-vortex/.gitignore
+project-vortex/README.md
+project-vortex/__init__.py
+project-vortex/firebase-debug.log
+project-vortex/poetry.lock
+project-vortex/pyproject.toml
+
+
+**Tool Call: List the `project-vortex/backend` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/__pycache__
+project-vortex/backend/api
+project-vortex/backend/core
+project-vortex/backend/etl
+project-vortex/backend/scitus
+project-vortex/backend/tests
+
+# Files:
+project-vortex/backend/__init__.py
+
+
+**Tool Call: Read file `README.md`**
+Status: Completed
+
+````project-vortex/README.md
+# Project Vortex 🌪️
+
+![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi)
+![Redis](https://img.shields.io/badge/Redis-Caching-red?style=for-the-badge&logo=redis)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker)
+
+**Project Vortex** is a high-throughput **Financial Assets ETL (Extract, Transform, Load) Engine** and analytics backend. It aggregates real-time market data from major Crypto, Forex, Stock and Commodity exchanges (Binance, CoinGecko), applies technical analysis transformations, and serves optimized data via a high-performance FastAPI layer.
+
+Designed for scalability and reliability, it employs a sophisticated **Factory-based architecture**, rigorous testing strategies, and a multi-tiered caching system.
+
+## 🏗️ Architecture
+
+The system follows a modular **ETL** pattern:
+
+```mermaid
+graph LR
+    A[Exchanges] -->|Extract| B(Extractors)
+    B -->|Raw Data| C{Transformers}
+    C -->|Technical Indicators| D[Loaders]
+    D -->|Persist| E[(InfluxDB / Postgres)]
+    D -->|Cache| F[(Redis)]
+    G[FastAPI] <-->|Query| F
+    G <-->|Query| E
+```
+
+### Key Components
+
+*   **Core ETL Engine**:
+    *   **Extractors**: Modular, factory-generated classes (`BinanceExtractor`, `CoinGeckoExtractor`) that normalize data from disparate APIs.
+    *   **Transformers**: Data processing units using **Pandas** and **Pandas-TA** to compute indicators (RSI, MACD, Bollinger Bands) on the fly.
+    *   **Loaders**: Abstracted storage interfaces ensuring data integrity across Time-Series (InfluxDB) and Relational (Postgres) stores.
+*   **Infrastructure**:
+    *   **Caching Strategy**: Implements a **Redis**-backed caching layer to minimize API latency and handle high-concurrency requests.
+    *   **Dependency Management**: Managed via **Poetry** for deterministic builds.
+    *   **Async I/O**: Leverages `aiohttp` and `asyncio` for non-blocking data ingestion.
+
+## 🛠️ Tech Stack
+
+*   **Language**: Python 3.13
+*   **Web Framework**: FastAPI
+*   **Data Processing**: Pandas, Pandas-TA
+*   **Storage**: Redis (Cache), InfluxDB (Time-Series), PostgreSQL (Metadata)
+*   **Testing**: Pytest (Unit & Contract tests)
+*   **Containerization**: Docker
+*   **Config**: Pydantic Settings
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+*   Python 3.13+
+*   Poetry
+*   Redis instance
+
+### Installation
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/yourusername/project-vortex.git
+    cd project-vortex
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    poetry install
+    ```
+
+3.  **Environment Setup**:
+    Copy `.env.example` to `.env` and configure your API keys and database URIs.
+    ```bash
+    cp .env.example .env
+    ```
+
+4.  **Run the Pipeline**:
+    ```bash
+    poetry run python -m backend.etl.main
+    ```
+
+5.  **Start the API Server**:
+    ```bash
+    poetry run uvicorn backend.api.main:app --reload
+    ```
+
+## 🧪 Testing Strategy
+
+Vortex employs a strict testing pyramid:
+
+*   **Unit Tests**: Isolated tests for Transformers and Utilities (mocked external dependencies).
+*   **Contract Tests**: Integration tests verifying API schemas against live exchange endpoints to detect breaking 3rd-party changes early.
+
+Run tests via:
+```bash
+poetry run pytest
+```
+
+## 📂 Project Structure
+
+```
+backend/
+├── api/            # FastAPI endpoints and schemas
+├── core/           # Config, Logging, and Base utilities
+├── etl/            # The ETL Engine
+│   ├── extractors/ # API Clients (Binance, CoinGecko)
+│   ├── transformers/ # Data normalization & TA logic
+│   └── loaders/    # Database adapters
+└── tests/          # Pytest suite
+```
+
+````
+
+
+**Tool Call: List the `project-vortex/backend/scitus` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/scitus/__pycache__
+project-vortex/backend/scitus/strategies
+
+# Files:
+project-vortex/backend/scitus/BaseStrategy.py
+project-vortex/backend/scitus/StrategyFactory.py
+project-vortex/backend/scitus/__init__.py
+
+
+**Tool Call: List the `project-vortex/backend/etl` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/etl/__pycache__
+project-vortex/backend/etl/controllers
+project-vortex/backend/etl/data_access
+project-vortex/backend/etl/extractors
+project-vortex/backend/etl/loaders
+project-vortex/backend/etl/transformers
+
+# Files:
+project-vortex/backend/etl/__init__.py
+
+
+**Tool Call: List the `project-vortex/backend/scitus/strategies` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/scitus/strategies/__pycache__
+
+# Files:
+project-vortex/backend/scitus/strategies/BollingerBandsStrategy.py
+project-vortex/backend/scitus/strategies/CompositeStrategy.py
+project-vortex/backend/scitus/strategies/HMARSIStrategy.py
+project-vortex/backend/scitus/strategies/MACDStrategy.py
+project-vortex/backend/scitus/strategies/StochRSIStrategy.py
+project-vortex/backend/scitus/strategies/VWAPStrategy.py
+project-vortex/backend/scitus/strategies/VotingStrategy.py
+
+
+**Tool Call: List the `project-vortex/backend/etl/extractors` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/etl/extractors/__pycache__
+
+# Files:
+project-vortex/backend/etl/extractors/BaseExtractor.py
+project-vortex/backend/etl/extractors/BinanceExtractor.py
+project-vortex/backend/etl/extractors/CoinGeckoExtractor.py
+project-vortex/backend/etl/extractors/ExtractorFactory.py
+project-vortex/backend/etl/extractors/__init__.py
+
+
+**Tool Call: List the `project-vortex/backend/etl/transformers` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/etl/transformers/__pycache__
+
+# Files:
+project-vortex/backend/etl/transformers/BaseTransformer.py
+project-vortex/backend/etl/transformers/BinanceHDTransformer.py
+project-vortex/backend/etl/transformers/StrategyTransformer.py
+project-vortex/backend/etl/transformers/TATransformer.py
+project-vortex/backend/etl/transformers/TransformerFactory.py
+project-vortex/backend/etl/transformers/__init__.py
+
+
+**Tool Call: Read file `backend/scitus/BaseStrategy.py`**
+Status: Completed
+
+```project-vortex/backend/scitus/BaseStrategy.py
+from abc import ABC, abstractmethod
+from typing import Any, Dict
+
+import pandas as pd
+
+
+class BaseStrategy(ABC):
+    """
+    Abstract base class for trading strategies.
+
+    This class provides a template for creating trading strategies. Subclasses
+    are expected to implement the `generate_signal` method, which contains
+    the core logic for generating trading signals based on market data.
+    """
+
+    def __init__(self, config: Dict[str, Any]):
+        """
+        Initializes the strategy with a given configuration.
+
+        Args:
+            config: A dictionary containing parameters for the strategy,
+                    such as indicator settings (e.g., moving average periods).
+        """
+        self.config = config
+
+    @abstractmethod
+    def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generates trading signals for the given market data.
+
+        This method must be implemented by any subclass. It should take a
+        DataFrame with OHLCV and potentially other indicator data, and return
+        a DataFrame with an added 'signal' column indicating trading
+        actions (e.g., 1 for buy, -1 for sell, 0 for hold).
+
+        Args:
+            data: A pandas DataFrame containing market data.
+
+        Returns:
+            A pandas DataFrame with the calculated trading signals.
+        """
+        pass
+
+```
+
+
+**Tool Call: Read file `backend/etl/transformers/StrategyTransformer.py`**
+Status: Completed
+
+```project-vortex/backend/etl/transformers/StrategyTransformer.py
+from typing import Any, Dict
+
+import pandas as pd
+
+from backend.core.VortexLogger import VortexLogger
+from backend.core.enums.StrategyConfigs import StrategyConfigs
+from backend.etl.transformers.BaseTransformer import BaseTransformer
+from backend.scitus.BaseStrategy import BaseStrategy
+from backend.scitus.StrategyFactory import StrategyFactory
+
+
+class StrategyTransformer(BaseTransformer):
+    """
+    Transforms technical analysis (TA) data by applying a set of trading strategies
+    to generate trading signals.
+    """
+
+    def __init__(
+        self,
+        raw_data: Dict[str, pd.DataFrame],
+        strategies_config: Dict[StrategyConfigs, Dict[str, Any]],
+        **kwargs,
+    ):
+        """
+        Initializes the StrategyTransformer.
+
+        Args:
+            raw_data: A dictionary of pandas DataFrames (keyed by asset ID) containing TA data.
+            strategies_config: A dictionary where keys are StrategyConfigs enums
+                               and values are configuration dictionaries for each strategy.
+        """
+        super().__init__(raw_data)
+        self.logger = VortexLogger(name=self.__class__.__name__, level="DEBUG")
+        self.strategies: Dict[StrategyConfigs, BaseStrategy] = {}
+        for strategy_name, config in strategies_config.items():
+            self.strategies[strategy_name] = StrategyFactory.create_strategy(
+                strategy_name, config
+            )
+
+    def transform(self) -> Dict[str, pd.DataFrame]:
+        """
+        Applies the configured trading strategies to the raw data to generate signals.
+
+        Returns:
+            A dictionary of pandas DataFrames (keyed by asset ID) with the original data
+            and additional columns for each strategy's trading signal.
+        """
+        transformed_data = {}
+        
+        if not isinstance(self.raw_data, dict):
+             # Fallback if somehow a single DF is passed (though not expected in this pipeline)
+             self.logger.warning("raw_data is not a dict, strategies will not be applied.")
+             return self.raw_data
+             
+        for asset_id, df in self.raw_data.items():
+            if df.empty:
+                transformed_data[asset_id] = df
+                continue
+                
+            df_copy = df.copy()
+            for strategy_name, strategy in self.strategies.items():
+                try:
+                    signal_df = strategy.generate_signal(df_copy)
+                    # We assume signal_df contains the original index and a 'signal' column.
+                    # Or strategy returns a DF with the signal column added.
+                    # Based on StochRSIStrategy it returns df with 'signal' column.
+                    
+                    # If the strategy returns a full DF, we can just use that,
+                    # but we need to merge if we run multiple strategies sequentially on the same DF copy.
+                    
+                    # More robust: take the 'signal' column from the result and add it to our df_copy
+                    if "signal" in signal_df.columns:
+                        df_copy[f"{strategy_name.name}_signal"] = signal_df["signal"]
+                except Exception as e:
+                    # Log error but continue
+                    self.logger.error(f"Error applying strategy {strategy_name} for asset {asset_id}: {e}")
+                    continue
+            
+            transformed_data[asset_id] = df_copy
+            
+        return transformed_data
+
+```
+
+
+**Tool Call: Read file `backend/etl/transformers/TATransformer.py`**
+Status: Completed
+
+```project-vortex/backend/etl/transformers/TATransformer.py
+import asyncio
+from typing import Dict, List
+
+import pandas as pd
+import pandas_ta as ta
+
+from backend.core.enums.TAStudies import TAStudies
+from backend.core.VortexLogger import VortexLogger
+from backend.etl.transformers.BaseTransformer import BaseTransformer
+
+
+class TATransformer(BaseTransformer):
+    """
+    Calculates technical analysis indicators on OHLCV dataframes using pandas-ta studies.
+    It takes a dictionary of dataframes and applies a list of TAStudies concurrently.
+    """
+
+    def __init__(self, raw_data: Dict[str, pd.DataFrame], studies: List[TAStudies], **kwargs):
+        """
+        Initializes the TATransformer.
+
+        Args:
+            raw_data: A dictionary of pandas DataFrames from a transformer like
+                      BinanceHDTransformer, where keys are asset IDs and values
+                      are OHLCV DataFrames.
+            studies: A list of TAStudies enums to be calculated.
+        """
+        super().__init__(raw_data)
+        self.studies = studies
+        self.logger = VortexLogger(name=self.__class__.__name__, level="DEBUG")
+
+        ta_configs = [study.value for study in self.studies]
+        self.study = ta.Study(
+            name="Vortex TA Study", ta=ta_configs, cores=0
+        )  # faster without multiproc
+
+    def _calculate_indicators_for_asset(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Synchronous function to calculate all specified indicators for a single asset's DataFrame
+        using a pandas-ta Study.
+        This function is designed to be run in a separate thread or process.
+
+        Args:
+            df: The OHLCV DataFrame for a single asset.
+
+        Returns:
+            A new DataFrame containing the calculated indicator columns and the 'close' column.
+            Returns an empty DataFrame if the study application fails.
+        """
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            return pd.DataFrame()
+
+        original_columns = set(df.columns)
+        df_copy = df.copy()
+
+        try:
+            # Apply the study. This appends indicators to df_copy in-place.
+            df_copy.ta.study(self.study)
+        except Exception as e:
+            self.logger.exception(f"Error applying TA study for one asset: {e}")
+            return pd.DataFrame()
+
+        new_columns = list(set(df_copy.columns) - original_columns)
+
+        columns_to_return = new_columns
+        if "close" in df_copy.columns:
+            if "close" not in columns_to_return:
+                columns_to_return.append("close")
+
+        # Handle case where study did not add any new columns
+        if not new_columns:
+            if "close" in df_copy.columns:
+                return df_copy[["close"]].copy()
+            else:
+                return pd.DataFrame()
+
+        return df_copy[columns_to_return]
+
+    async def _run_async_calculations(self) -> Dict[str, pd.DataFrame]:
+        """
+        Creates and runs asynchronous tasks to calculate indicators for all assets concurrently.
+        """
+        loop = asyncio.get_running_loop()
+
+        # Create a list of futures, running the CPU-bound calculation in an executor
+        # to prevent blocking the event loop and achieve concurrency.
+        futures = [
+            loop.run_in_executor(None, self._calculate_indicators_for_asset, df)
+            for df in self.raw_data.values()
+        ]
+
+        # Wait for all calculations to complete
+        results = await asyncio.gather(*futures)
+
+        # Map the results back to their corresponding asset IDs
+        return dict(zip(self.raw_data.keys(), results))
+
+    def transform(self) -> Dict[str, pd.DataFrame]:
+        """
+        Transforms the OHLCV data by calculating and adding technical indicators via studies.
+        This is the main entry point, which orchestrates the async execution.
+
+        Returns:
+            A dictionary where keys are asset IDs and values are DataFrames
+            containing the calculated indicators and the 'close' column.
+        """
+        if not self.raw_data or not self.studies:
+            return {}
+
+        # Run the async orchestrator and return the results
+        return asyncio.run(self._run_async_calculations())
+
+```
+
+
+**Tool Call: Read file `backend/scitus/strategies/VotingStrategy.py`**
+Status: Completed
+
+```project-vortex/backend/scitus/strategies/VotingStrategy.py
+import pandas as pd
+import numpy as np
+from typing import List, Dict, Any
+from backend.scitus.BaseStrategy import BaseStrategy
+from backend.core.enums.SignalTypes import SignalTypes
+from backend.core.enums.StrategyConfigs import StrategyConfigs
+
+class VotingStrategy(BaseStrategy):
+    """
+    A strategy that aggregates signals from multiple sub-strategies via voting.
+    """
+
+    def __init__(self, config: Dict[str, Any]):
+        """
+        Initializes the VotingStrategy.
+        
+        Config structure expected:
+        {
+            "strategies": [
+                {"type": "MACD", "config": {...}},
+                {"type": "RSI", "config": {...}}
+            ],
+            "min_votes": 2
+        }
+        """
+        super().__init__(config)
+        self.strategies: List[BaseStrategy] = []
+        self.min_votes = self.config.get("min_votes", 1)
+        self._initialize_strategies()
+
+    def _initialize_strategies(self):
+        # Local import to avoid circular dependency
+        from backend.scitus.StrategyFactory import StrategyFactory
+        
+        strategy_configs = self.config.get("strategies", [])
+        for entry in strategy_configs:
+            strat_type_str = entry.get("type")
+            strat_conf = entry.get("config", {})
+            
+            # Resolve string to Enum
+            try:
+                # Assuming strat_type_str matches the Enum member name exactly (e.g. "MACD")
+                strat_enum = StrategyConfigs[strat_type_str]
+                strategy = StrategyFactory.create_strategy(strat_enum, strat_conf)
+                self.strategies.append(strategy)
+            except KeyError:
+                print(f"Warning: Unknown strategy type '{strat_type_str}' in VotingStrategy config.")
+            except Exception as e:
+                print(f"Error initializing sub-strategy {strat_type_str}: {e}")
+
+    def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
+        if not self.strategies:
+            return data
+            
+        df = data.copy()
+        # Initialize vote counters
+        buy_votes = pd.Series(0, index=df.index)
+        sell_votes = pd.Series(0, index=df.index)
+        
+        for strategy in self.strategies:
+            # We assume generate_signal returns a DF with a 'signal' column
+            # or the same DF with 'signal' appended.
+            try:
+                sig_df = strategy.generate_signal(df.copy())
+                if "signal" in sig_df.columns:
+                    # Tally votes
+                    s = sig_df["signal"]
+                    buy_votes += (s == SignalTypes.BUY.value).astype(int)
+                    # Some strategies might use UNDERPRICED as BUY equivalent, check logic?
+                    # For now, strict mapping to SignalTypes
+                    
+                    sell_votes += (s == SignalTypes.SELL.value).astype(int)
+            except Exception as e:
+                print(f"Error in sub-strategy execution: {e}")
+                
+        # Determine final signal
+        final_signal = pd.Series(SignalTypes.HOLD.value, index=df.index)
+        
+        # Buy Condition
+        final_signal[buy_votes >= self.min_votes] = SignalTypes.BUY.value
+        
+        # Sell Condition (Prioritize Sell if both meet threshold? Or net vote? 
+        # Usually Sell signals are distinct. Let's say if Sell votes >= threshold -> Sell)
+        # If both conflict, Hold (or prioritize one). Here we let Sell overwrite Buy for safety.
+        final_signal[sell_votes >= self.min_votes] = SignalTypes.SELL.value
+        
+        df["signal"] = final_signal
+        return df
+
+```
+
+
+**Tool Call: Read file `backend/scitus/strategies/StochRSIStrategy.py`**
+Status: Completed
+
+```project-vortex/backend/scitus/strategies/StochRSIStrategy.py
+import numpy as np
+import pandas as pd
+
+from backend.core.enums.SignalTypes import SignalTypes
+from backend.scitus.BaseStrategy import BaseStrategy
+
+
+class StochRSIStrategy(BaseStrategy):
+    """
+    Generates trading signals based on the Stochastic RSI indicator.
+    """
+
+    def __init__(self, config: dict):
+        """
+        Initializes the StochRSIStrategy with a given configuration.
+
+        Args:
+            config: A dictionary containing parameters for the strategy.
+                    - k_col: Name of the %K line column.
+                    - d_col: Name of the %D line column.
+                    - overbought_threshold: Threshold for overbought condition.
+                    - oversold_threshold: Threshold for oversold condition.
+        """
+        super().__init__(config)
+        self.k_col = self.config.get("k_col", "STOCHRSIk_14_14_3_3")
+        self.d_col = self.config.get("d_col", "STOCHRSId_14_14_3_3")
+        self.overbought_threshold = self.config.get("overbought_threshold", 80)
+        self.oversold_threshold = self.config.get("oversold_threshold", 20)
+
+    def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generates trading signals for the given market data.
+
+        Args:
+            data: A pandas DataFrame containing market data with StochRSI values.
+
+        Returns:
+            A pandas DataFrame with the calculated trading signals in a 'signal' column.
+        """
+        df = data.copy()
+
+        k = df[self.k_col]
+        d = df[self.d_col]
+
+        # Valuation signal
+        conditions_valuation = [
+            (k < self.oversold_threshold) & (d < self.oversold_threshold),
+            (k > self.overbought_threshold) & (d > self.overbought_threshold),
+        ]
+        choices_valuation = [
+            SignalTypes.UNDERPRICED.value,
+            SignalTypes.OVERPRICED.value,
+        ]
+        valuation_signal = np.select(
+            conditions_valuation, choices_valuation, default=SignalTypes.HOLD.value
+        )
+
+        # Trend signal
+        trend_signal = np.where(
+            k >= d, SignalTypes.BUY.value, SignalTypes.SELL.value
+        )
+
+        # Combine signals
+        combined_signal = valuation_signal + trend_signal
+
+        # Clip to range of enum values
+        df["signal"] = np.clip(
+            combined_signal,
+            SignalTypes.OVERPRICED.value,
+            SignalTypes.UNDERPRICED.value,
+        )
+
+        return df
+
+```
+
+
+**Tool Call: Read file `backend/scitus/strategies/CompositeStrategy.py`**
+Status: Completed
+
+```project-vortex/backend/scitus/strategies/CompositeStrategy.py
+import pandas as pd
+import numpy as np
+from typing import Dict, Any, Optional
+from backend.scitus.BaseStrategy import BaseStrategy
+from backend.core.enums.SignalTypes import SignalTypes
+from backend.core.enums.StrategyConfigs import StrategyConfigs
+
+class CompositeStrategy(BaseStrategy):
+    """
+    A strategy that uses a Primary strategy to generate candidates,
+    and a set of Filter strategies to confirm them.
+    
+    Logic:
+    - Primary says BUY -> Check Filters.
+    - If ALL Filters agree (or don't say SELL), confirm BUY.
+    - Else HOLD.
+    """
+
+    def __init__(self, config: Dict[str, Any]):
+        """
+        Config structure expected:
+        {
+            "primary_strategy": {"type": "MACD", "config": {...}},
+            "filter_strategies": [
+                {"type": "RSI", "config": {...}}
+            ]
+        }
+        """
+        super().__init__(config)
+        self.primary_strategy: Optional[BaseStrategy] = None
+        self.filter_strategies: list[BaseStrategy] = []
+        self._initialize_strategies()
+
+    def _initialize_strategies(self):
+        from backend.scitus.StrategyFactory import StrategyFactory
+        
+        # Init Primary
+        primary_conf = self.config.get("primary_strategy", {})
+        if primary_conf:
+            try:
+                p_type = primary_conf.get("type")
+                p_cfg = primary_conf.get("config", {})
+                self.primary_strategy = StrategyFactory.create_strategy(
+                    StrategyConfigs[p_type], p_cfg
+                )
+            except Exception as e:
+                print(f"Error initializing primary strategy: {e}")
+
+        # Init Filters
+        filter_confs = self.config.get("filter_strategies", [])
+        for entry in filter_confs:
+            try:
+                f_type = entry.get("type")
+                f_cfg = entry.get("config", {})
+                filt = StrategyFactory.create_strategy(
+                    StrategyConfigs[f_type], f_cfg
+                )
+                self.filter_strategies.append(filt)
+            except Exception as e:
+                print(f"Error initializing filter strategy: {e}")
+
+    def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        
+        if not self.primary_strategy:
+            return df
+            
+        # 1. Get Primary Signal
+        primary_res = self.primary_strategy.generate_signal(df.copy())
+        if "signal" not in primary_res.columns:
+            return df
+            
+        primary_signals = primary_res["signal"]
+        
+        # 2. Apply Filters
+        # We start with the primary signal, then invalidate it if filters disagree
+        final_signal = primary_signals.copy()
+        
+        for filt in self.filter_strategies:
+            filt_res = filt.generate_signal(df.copy())
+            if "signal" in filt_res.columns:
+                filt_s = filt_res["signal"]
+                
+                # Logic:
+                # If Primary is BUY, Filter must NOT be SELL (or must be BUY? "Confirmation" vs "Filter")
+                # Let's implement "Confirmation": Filter must also be BUY to allow a BUY.
+                # If Filter is HOLD, it invalidates the BUY. (Strict Mode)
+                # Flexible Mode: Filter must not be SELL.
+                
+                # Let's go with Strict Confirmation for "Composite" usually implies high confidence.
+                # BUY requires Primary=BUY AND Filter=BUY
+                
+                mask_buy = (final_signal == SignalTypes.BUY.value)
+                # If filter is not BUY, set to HOLD
+                final_signal[mask_buy & (filt_s != SignalTypes.BUY.value)] = SignalTypes.HOLD.value
+                
+                # SELL requires Primary=SELL AND Filter=SELL
+                mask_sell = (final_signal == SignalTypes.SELL.value)
+                final_signal[mask_sell & (filt_s != SignalTypes.SELL.value)] = SignalTypes.HOLD.value
+
+        df["signal"] = final_signal
+        return df
+
+```
+
+
+**Tool Call: Search files for regex `backtest|BackTest|Backtest`**
+Status: Completed
+
+No matches found
+
+**Tool Call: List the `project-vortex/backend/core` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/core/__pycache__
+project-vortex/backend/core/enums
+
+# Files:
+project-vortex/backend/core/Config.py
+project-vortex/backend/core/RateLimiter.py
+project-vortex/backend/core/VortexLogger.py
+project-vortex/backend/core/__init__.py
+
+
+**Tool Call: Read file `backend/core/enums/SignalTypes.py`**
+Status: Completed
+
+```project-vortex/backend/core/enums/SignalTypes.py
+from enum import Enum
+
+
+class SignalTypes(Enum):
+    UNDERPRICED = 3
+    STRONG_BUY = 2
+    BUY = 1
+    HOLD = 0
+    SELL = -1
+    STRONG_SELL = -2
+    OVERPRICED = -3
+
+```
+
+
+**Tool Call: List the `project-vortex/backend/core/enums` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/core/enums/__pycache__
+
+# Files:
+project-vortex/backend/core/enums/AssetEnums.py
+project-vortex/backend/core/enums/BinanceEnums.py
+project-vortex/backend/core/enums/ExchangeEnums.py
+project-vortex/backend/core/enums/ExtractionMode.py
+project-vortex/backend/core/enums/LoaderDestinations.py
+project-vortex/backend/core/enums/SignalTypes.py
+project-vortex/backend/core/enums/StrategyConfigs.py
+project-vortex/backend/core/enums/TAStudies.py
+project-vortex/backend/core/enums/TransformTypes.py
+
+
+**Tool Call: Read file `backend/etl/extractors/BinanceExtractor.py`**
+Status: Completed
+
+```project-vortex/backend/etl/extractors/BinanceExtractor.py
+import json
+from typing import Any, Dict, List
+
+from backend.core.Config import AppConfig
+from backend.core.enums.AssetEnums import DataIntervals
+from backend.core.enums.BinanceEnums import SymbolStatus
+from backend.core.enums.ExchangeEnums import Exchange
+from backend.core.VortexLogger import VortexLogger
+from backend.etl.extractors.BaseExtractor import BaseExtractor
+
+
+class BinanceExtractor(BaseExtractor):
+    """
+    Extractor implementation for Binance API.
+    """
+
+    def __init__(self, **kwargs):
+        self.config = AppConfig()
+
+        # Binance API rate limits: 1200 requests per minute.
+        rate_limit_configs = {"default": {"requests_per_minute": 1200}}
+
+        super().__init__(
+            api_base_url="https://api.binance.com",
+            rate_limit_configs=rate_limit_configs,
+            logger=VortexLogger(name="BinanceExtractor", level="INFO"),
+            **kwargs,
+        )
+
+        self.api_key = self.config.binance_api_key
+        self.api_secret = self.config.binance_api_secret
+        self.exchange = Exchange.BINANCE.value
+
+    def get_listed_assets(self) -> List[Dict[str, Any]]:
+        try:
+            url = f"{self.api_base_url}/api/v3/exchangeInfo"
+            response_data = self._make_sync_request(url)
+            data = []
+
+            for symbol_data in response_data.get("symbols", []):
+                if (
+                    symbol_data["status"] == SymbolStatus.TRADING.value
+                    and symbol_data["isSpotTradingAllowed"]
+                ):
+                    data.append(
+                        {
+                            "id": symbol_data["symbol"],
+                            "name": symbol_data["symbol"],
+                            "type": "crypto",
+                            "exchange": "Binance",
+                            "base_asset": symbol_data["baseAsset"],
+                            "quote_asset": symbol_data["quoteAsset"],
+                        }
+                    )
+
+            return data
+        except Exception as e:
+            self.logger.exception(f"Error fetching listed assets: {e}")
+            return []
+
+    def get_all_exchange_info(self) -> Dict[str, Any]:
+        try:
+            url = f"{self.api_base_url}/api/v3/exchangeInfo"
+            return self._make_sync_request(url)
+        except Exception as e:
+            self.logger.exception(f"Error fetching exchange info: {e}")
+            return {}
+
+    def get_historical_data_for_assets(
+        self,
+        asset_ids: List[str],
+        interval: DataIntervals = DataIntervals.ONE_DAY,
+        limit=100,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        url = f"{self.api_base_url}/api/v3/klines"
+        requests_with_keys = []
+        for asset_id in asset_ids:
+            params = {
+                "symbol": asset_id,
+                "interval": interval.value,
+                "limit": limit,
+            }
+            requests_with_keys.append((asset_id, url, params))
+
+        return self.fetch_all_async_data(requests_with_keys)
+
+    def get_trades(self, asset_ids: List[str], limit=500, **kwargs) -> Dict[str, Any]:
+        url = f"{self.api_base_url}/api/v3/trades"
+        requests_with_keys = []
+        for asset_id in asset_ids:
+            params = {"symbol": asset_id, "limit": limit}
+            requests_with_keys.append((asset_id, url, params))
+
+        return self.fetch_all_async_data(requests_with_keys)
+
+    def get_order_book(
+        self, asset_ids: List[str], limit=100, **kwargs
+    ) -> Dict[str, Any]:
+        url = f"{self.api_base_url}/api/v3/depth"
+        requests_with_keys = []
+        for asset_id in asset_ids:
+            params = {"symbol": asset_id, "limit": limit}
+            requests_with_keys.append((asset_id, url, params))
+
+        return self.fetch_all_async_data(requests_with_keys)
+
+    def get_order_book_ticker(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
+        result = {}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/bookTicker"
+            params = {"symbols": json.dumps(asset_ids).replace(" ", "")}
+            response_data = self._make_sync_request(url, params)
+            result = {
+                a["symbol"]: {k: v for k, v in a.items() if k != "symbol"}
+                for a in response_data
+            }
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest prices: {e}")
+        return result
+
+    def get_full_order_book_ticker(self, **kwargs) -> Dict[str, Any]:
+        result = {}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/bookTicker"
+            response_data = self._make_sync_request(url)
+            result = {
+                a["symbol"]: {k: v for k, v in a.items() if k != "symbol"}
+                for a in response_data
+            }
+        except Exception as e:
+            self.logger.exception(f"Error fetching full order book ticker: {e}")
+        return result
+
+    def get_latest_market_data_for_all_assets_24hr(self, **kwargs) -> Dict[str, Any]:
+        result = {}
+        url = f"{self.api_base_url}/api/v3/ticker/24hr"
+        try:
+            result = self._make_sync_request(url)
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest market data: {e}")
+        return result
+
+    def get_market_data_for_assets(
+        self,
+        asset_ids: List[str],
+        interval: DataIntervals = DataIntervals.ONE_DAY,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """OHLC single window for given assets and interval. Weight is 4 per asset_id. Max len(asset_ids)=100"""
+        result = {}
+        url = f"{self.api_base_url}/api/v3/ticker"
+
+        try:
+            params = {
+                "symbols": json.dumps(asset_ids).replace(" ", ""),
+                "windowSize": interval.value,
+            }
+            response_data = self._make_sync_request(url, params)
+            result = {a["symbol"]: a for a in response_data}
+        except Exception as e:
+            self.logger.exception(
+                f"Error fetching latest market data for {asset_ids}: {e}"
+            )
+
+        return result
+
+    def get_latest_data_for_assets(
+        self, asset_ids: List[str], **kwargs
+    ) -> Dict[str, Any]:
+        result = {}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/price"
+            params = {"symbols": json.dumps(asset_ids).replace(" ", "")}
+            response_data = self._make_sync_request(url, params)
+            result = {a["symbol"]: a["price"] for a in response_data}
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest prices: {e}")
+        return result
+
+    def get_all_ticker_price(self, **kwargs) -> Dict[str, Any]:
+        result = {}
+        try:
+            url = f"{self.api_base_url}/api/v3/ticker/price"
+            json_list = self._make_sync_request(url)
+            result = {a["symbol"]: a["price"] for a in json_list}
+        except Exception as e:
+            self.logger.exception(f"Error fetching latest prices: {e}")
+        return result
+
+    def run_extraction(self):
+        """
+        Example pipeline run: fetch listed assets and their latest data.
+        """
+        self.logger.info("Starting Binance extraction pipeline...")
+        assets = self.get_listed_assets()
+        if not assets:
+            self.logger.warning("No assets retrieved from Binance.")
+            return
+
+        asset_ids = [a["id"] for a in assets[:5]]  # Limit for demo
+        latest_data = self.get_latest_data_for_assets(asset_ids)
+        self.logger.info(f"Extracted latest data for {len(asset_ids)} assets.")
+        self.logger.info(f"{latest_data}")
+        return latest_data
+
+```
+
+
+**Tool Call: Read file `backend/etl/loaders`**
+Status: Failed
+
+reading bytes of the file "/Users/dgkngk/workspace/project-vortex/backend/etl/loaders"
+
+**Tool Call: List the `project-vortex/backend/etl/loaders` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/etl/loaders/__pycache__
+
+# Files:
+project-vortex/backend/etl/loaders/BaseLoader.py
+project-vortex/backend/etl/loaders/LoaderFactory.py
+project-vortex/backend/etl/loaders/__init__.py
+
+
+**Tool Call: Read file `backend/etl/loaders/BaseLoader.py`**
+Status: Completed
+
+```project-vortex/backend/etl/loaders/BaseLoader.py
+from abc import ABC
+from typing import Any, List
+
+from backend.etl.data_access.DataDestinationClient import DataDestinationClient
+
+
+class BaseLoader(ABC):
+    """
+    Abstract base class for data loaders.
+    Defines the interface for saving transformed data into various storages.
+    """
+
+    def __init__(self, destinations: List[DataDestinationClient]):
+        self.destinations = destinations
+
+    def save_to_destinations(self, data: Any):
+        """
+        Main method to orchestrate saving to one or more destinations.
+        Args:
+            data: The transformed data.
+        """
+        for destination in self.destinations:
+            destination.save_data(data)
+
+```
+
+
+**Tool Call: Read file `backend/scitus/strategies/MACDStrategy.py`**
+Status: Completed
+
+```project-vortex/backend/scitus/strategies/MACDStrategy.py
+import numpy as np
+import pandas as pd
+
+from backend.core.enums.SignalTypes import SignalTypes
+from backend.scitus.BaseStrategy import BaseStrategy
+
+
+class MACDStrategy(BaseStrategy):
+    """
+    Generates trading signals based on the MACD indicator.
+    """
+
+    def __init__(self, config: dict):
+        """
+        Initializes the MACDStrategy with a given configuration.
+
+        Args:
+            config: A dictionary containing parameters for the strategy.
+                    - macd_col: Name of the MACD line column.
+                    - macd_signal_col: Name of the MACD signal line column.
+                    - overbought_threshold: Threshold for overbought condition.
+                    - oversold_threshold: Threshold for oversold condition.
+        """
+        super().__init__(config)
+        self.macd_col = self.config.get("macd_col", "MACD_12_26_9")
+        self.macd_signal_col = self.config.get("macd_signal_col", "MACDs_12_26_9")
+        self.overbought_threshold = self.config.get("overbought_threshold", 2)
+        self.oversold_threshold = self.config.get("oversold_threshold", -2)
+
+    def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generates trading signals for the given market data.
+
+        Args:
+            data: A pandas DataFrame containing market data with MACD values.
+
+        Returns:
+            A pandas DataFrame with the calculated trading signals in a 'signal' column.
+        """
+        df = data.copy()
+
+        macd = df[self.macd_col]
+        macd_s = df[self.macd_signal_col]
+
+        # Valuation signal
+        conditions_valuation = [
+            (macd > self.overbought_threshold) & (macd_s > self.overbought_threshold),
+            (macd < self.oversold_threshold) & (macd_s < self.oversold_threshold),
+        ]
+        choices_valuation = [
+            SignalTypes.OVERPRICED.value,
+            SignalTypes.UNDERPRICED.value,
+        ]
+        valuation_signal = np.select(
+            conditions_valuation, choices_valuation, default=SignalTypes.HOLD.value
+        )
+
+        # Trend signal
+        trend_signal = np.where(
+            macd >= macd_s, SignalTypes.BUY.value, SignalTypes.SELL.value
+        )
+
+        # Combine signals
+        combined_signal = valuation_signal + trend_signal
+
+        # Clip to range of enum values
+        df["signal"] = np.clip(
+            combined_signal,
+            SignalTypes.OVERPRICED.value,
+            SignalTypes.UNDERPRICED.value,
+        )
+
+        return df
+
+```
+
+
+**Tool Call: List the `project-vortex/backend/tests` directory's contents**
+Status: Completed
+
+# Folders:
+project-vortex/backend/tests/__pycache__
+project-vortex/backend/tests/test_plots
+
+# Files:
+project-vortex/backend/tests/__init__.py
+project-vortex/backend/tests/test_base_controller.py
+project-vortex/backend/tests/test_binance_extractor.py
+project-vortex/backend/tests/test_binance_hd_transformer_contract.py
+project-vortex/backend/tests/test_coingecko_extractor.py
+project-vortex/backend/tests/test_coingecko_extractor_contract.py
+project-vortex/backend/tests/test_composite_voting_strategies.py
+project-vortex/backend/tests/test_crypto_controller.py
+project-vortex/backend/tests/test_crypto_controller_contract.py
+project-vortex/backend/tests/test_extractor_factory.py
+project-vortex/backend/tests/test_local_cache_client_contract.py
+project-vortex/backend/tests/test_redis_cache_client_contract.py
+project-vortex/backend/tests/test_strategy_transformer_contract.py
+project-vortex/backend/tests/test_ta_transformer_contract.py
+
+
+**Tool Call: Read file `backend/core/enums/StrategyConfigs.py`**
+Status: Completed
+
+```project-vortex/backend/core/enums/StrategyConfigs.py
+from enum import Enum
+
+
+class StrategyConfigs(Enum):
+    BOLLINGER_BANDS = {
+        "close_col": "close",
+        "bbh_col": "BBU_5_2.0_2.0",
+        "bbm_col": "BBM_5_2.0_2.0",
+        "bbl_col": "BBL_5_2.0_2.0",
+        "proximity_factor": 0.05,
+    }
+    STOCHRSI = {
+        "k_col": "STOCHRSIk_14_14_3_3",
+        "d_col": "STOCHRSId_14_14_3_3",
+        "overbought_threshold": 80,
+        "oversold_threshold": 20,
+    }
+    MACD = {
+        "macd_col": "MACD_12_26_9",
+        "macd_signal_col": "MACDs_12_26_9",
+        "overbought_threshold": 2,
+        "oversold_threshold": -2,
+    }
+    VWAP = {"close_col": "close", "vwap_col": "VWAP_D", "proximity_factor": 0.01}
+    HMA_RSI = {
+        "close_col": "close",
+        "hma_col": "HMA_10",
+        "rsi_col": "RSI_14",
+        "rsi_hma_period": 14,
+        "rsi_buy_threshold": 40,
+        "rsi_sell_threshold": 60,
+    }
+    VOTING = {
+        "strategies": [],
+        "min_votes": 1,
+    }
+    COMPOSITE = {
+        "primary_strategy": {},
+        "filter_strategies": [],
+    }
+
+```
+
+
+**Tool Call: Read file `backend/core/enums/TAStudies.py`**
+Status: Completed
+
+```project-vortex/backend/core/enums/TAStudies.py
+from enum import Enum
+
+
+class TAStudies(Enum):
+    """
+    Configurations for pandas-ta studies.
+    Each enum member is a dictionary that can be used in a pandas-ta Study.
+    """
+
+    RSI = {"kind": "rsi"}
+    MACD = {"kind": "macd"}
+    BBANDS = {"kind": "bbands"}
+    STOCHRSI = {"kind": "stochrsi"}
+    VWAP = {"kind": "vwap"}
+    HMA = {"kind": "hma"}
+
+```
+
+
+**Tool Call: Thinking**
+Status: Completed
+
+Now I have a comprehensive view of the project. Let me analyze what's currently implemented vs what's planned, and provide a quant developer perspective on what's needed to achieve >50% alpha over buy-and-hold.
+
+## Current State Analysis
+
+### What's Implemented:
+1. **ETL Infrastructure** ✅
+   - Extractors: BinanceExtractor, CoinGeckoExtractor with async data fetching
+   - Transformers: TATransformer (pandas-ta based), StrategyTransformer
+   - Loaders: Basic framework with DataDestinationClient
+
+2. **Technical Analysis** ✅
+   - RSI, MACD, Bollinger Bands, StochRSI, VWAP, HMA via pandas-ta
+
+3. **Heuristic Strategies** (Level 1) ✅
+   - StochRSIStrategy, MACDStrategy, BollingerBandsStrategy, VWAPStrategy, HMARSIStrategy
+   - VotingStrategy (ensemble voting)
+   - CompositeStrategy (primary + filter confirmation)
+
+### What's NOT Implemented (from the plans):
+1. **Backtesting Engine** ❌ - Completely missing
+   - No VectorizedBacktester
+   - No EventBacktester
+   - No metrics calculation (Sharpe, Sortino, MaxDD)
+   - No visualization
+
+2. **Level 2: Predictive Models** ❌
+   - No XGBoost/LightGBM integration
+   - No LSTM/Transformer models
+   - No feature engineering pipeline
+
+3. **Level 3: Market Regimes** ❌
+   - No HMM implementation
+   - No regime detection
+
+4. **Level 4: GNN** ❌
+   - No graph construction
+   - No cross-asset correlation modeling
+
+5. **Level 5: RL Agent** ❌
+   - No DQN/PPO implementation
+   - No reward functions
+
+6. **Infrastructure Gaps** ❌
+   - No proper Feature Store
+   - No Model Registry (MLFlow)
+   - No proper data persistence (no InfluxDB/Postgres loaders implemented)
+
+## Critical Analysis for >50% Alpha
+
+To achieve >50% better outcomes than buy-and-hold, several fundamental issues need to be addressed:
+
+1. **No validation mechanism** - Without backtesting, you can't measure alpha at all
+2. **Naive signal generation** - Current strategies are basic TA which historically struggle to outperform buy-and-hold after costs
+3. **No risk management** - No position sizing, stop-losses, or drawdown controls
+4. **No regime awareness** - Same strategy in trending vs choppy markets = losses
+5. **No cross-asset intelligence** - Missing correlations and lead-lag relationships
+6. **No transaction cost modeling** - Critical for realistic alpha estimation
+
+
+## Assistant
+
+# Quant Analysis: Project Vortex Evaluation
+
+## Executive Summary
+
+After reviewing your codebase and implementation plans, I'll give you a frank assessment: **the system as currently implemented cannot generate alpha, let alone 50% better outcomes than buy-and-hold**. Here's why and what you need to build.
+
+---
+
+## Current Implementation Status
+
+### ✅ What You Have (Working)
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| Data Extraction | ✅ Solid | `backend/etl/extractors/` - Binance, CoinGecko with async fetching |
+| Technical Indicators | ✅ Good | `backend/etl/transformers/TATransformer.py` - pandas-ta integration |
+| Basic Strategies | ✅ Exists | `backend/scitus/strategies/` - MACD, StochRSI, BB, VWAP, HMA-RSI |
+| Ensemble Logic | ✅ Exists | `VotingStrategy.py`, `CompositeStrategy.py` |
+
+### ❌ What's Completely Missing
+
+| Component | Impact | Priority |
+|-----------|--------|----------|
+| **Backtesting Engine** | **Fatal** - You literally cannot measure performance | 🔴 Critical |
+| **Metrics Library** | **Fatal** - No Sharpe, Sortino, MaxDD, Win Rate | 🔴 Critical |
+| **Feature Store** | High - No reproducible feature engineering | 🟡 High |
+| **ML Pipeline** | High - No predictive models | 🟡 High |
+| **Regime Detection** | Medium - Context-blind trading | 🟡 Medium |
+| **Risk Management** | High - No position sizing, no stops | 🟡 High |
+
+---
+
+## Why Current Strategies Won't Beat Buy-and-Hold
+
+Your current strategies suffer from several fundamental problems:
+
+### 1. **Lookback Bias Risk**
+Your signal generation doesn't explicitly handle the alignment:
+
+```project-vortex/backend/scitus/strategies/MACDStrategy.py#L43-L55
+        # Trend signal
+        trend_signal = np.where(
+            macd >= macd_s, SignalTypes.BUY.value, SignalTypes.SELL.value
+        )
+
+        # Combine signals
+        combined_signal = valuation_signal + trend_signal
+
+        # Clip to range of enum values
+        df["signal"] = np.clip(
+            combined_signal,
+            SignalTypes.OVERPRICED.value,
+            SignalTypes.UNDERPRICED.value,
+        )
+```
+
+**Problem:** These signals are generated at time `t`, but you'd be trading at time `t+1`. Without proper backtesting framework that shifts signals, you're accidentally "seeing the future."
+
+### 2. **No Transaction Costs**
+Your strategies generate signals without any awareness of:
+- Trading fees (0.1% per trade on Binance)
+- Slippage (can be 0.05-0.5% in crypto)
+- Bid-ask spread
+
+A strategy that "beats" buy-and-hold by 10% before costs often **loses** after costs.
+
+### 3. **Over-Trading**
+Looking at your signal types:
+
+```project-vortex/backend/core/enums/SignalTypes.py#L1-L11
+from enum import Enum
+
+
+class SignalTypes(Enum):
+    UNDERPRICED = 3
+    STRONG_BUY = 2
+    BUY = 1
+    HOLD = 0
+    SELL = -1
+    STRONG_SELL = -2
+    OVERPRICED = -3
+```
+
+The combined signals in strategies like `MACDStrategy` will flip frequently. High turnover = high costs = negative alpha.
+
+### 4. **Academic TA Doesn't Work in Isolation**
+RSI oversold + MACD crossover strategies are the "Hello World" of quantitative trading. They're **public knowledge**, meaning they're arbitraged away. You need:
+- Non-obvious features
+- Regime conditioning
+- Cross-asset information
+
+---
+
+## What You Need to Build (Prioritized Roadmap)
+
+### Phase 1: Validation Layer (MUST DO FIRST)
+
+Without this, everything else is guesswork.
+
+#### 1.1 Vectorized Backtester
+```/dev/null/VectorizedBacktester.py#L1-L45
+class VectorizedBacktester:
+    def __init__(self, initial_capital=10000, commission=0.001, slippage=0.0005):
+        self.initial_capital = initial_capital
+        self.commission = commission
+        self.slippage = slippage
+    
+    def run(self, data: pd.DataFrame, signal_col: str = 'signal') -> pd.DataFrame:
+        df = data.copy()
+        
+        # CRITICAL: Shift signals to avoid lookahead bias
+        df['position'] = df[signal_col].shift(1).fillna(0)
+        df['position'] = df['position'].apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+        
+        # Calculate returns
+        df['returns'] = df['close'].pct_change()
+        df['strategy_returns'] = df['position'] * df['returns']
+        
+        # Apply transaction costs when position changes
+        df['position_change'] = df['position'].diff().abs()
+        df['costs'] = df['position_change'] * (self.commission + self.slippage)
+        df['strategy_returns'] -= df['costs']
+        
+        # Equity curve
+        df['equity'] = self.initial_capital * (1 + df['strategy_returns']).cumprod()
+        df['benchmark'] = self.initial_capital * (1 + df['returns']).cumprod()
+        
+        return df
+```
+
+#### 1.2 Metrics Library
+```/dev/null/Metrics.py#L1-L35
+def calculate_sharpe_ratio(returns: pd.Series, risk_free_rate=0.0, periods=365) -> float:
+    """Annualized Sharpe Ratio"""
+    excess_returns = returns - risk_free_rate / periods
+    return np.sqrt(periods) * excess_returns.mean() / excess_returns.std()
+
+def calculate_sortino_ratio(returns: pd.Series, risk_free_rate=0.0, periods=365) -> float:
+    """Only penalize downside volatility"""
+    excess_returns = returns - risk_free_rate / periods
+    downside = returns[returns < 0].std()
+    return np.sqrt(periods) * excess_returns.mean() / downside if downside != 0 else np.inf
+
+def calculate_max_drawdown(equity_curve: pd.Series) -> float:
+    """Maximum peak-to-trough decline"""
+    rolling_max = equity_curve.expanding().max()
+    drawdowns = equity_curve / rolling_max - 1
+    return drawdowns.min()
+
+def calculate_alpha(strategy_returns: pd.Series, benchmark_returns: pd.Series) -> float:
+    """Jensen's Alpha - excess return above CAPM prediction"""
+    # Simplified: alpha = strategy_return - benchmark_return
+    return (strategy_returns.mean() - benchmark_returns.mean()) * 365  # Annualized
+```
+
+### Phase 2: Feature Engineering for Alpha
+
+Your current TA features are **necessary but not sufficient**. You need:
+
+#### 2.1 Stationarity Transforms
+Raw prices are non-stationary. ML models hate this.
+```/dev/null/FeatureEngineering.py#L1-L20
+def make_stationary(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert price data to stationary features"""
+    result = df.copy()
+    
+    # Log returns (most common)
+    result['log_return'] = np.log(df['close'] / df['close'].shift(1))
+    
+    # Fractional differentiation (preserves memory while achieving stationarity)
+    result['frac_diff'] = fractional_differentiation(df['close'], d=0.4)
+    
+    # Z-score normalization of indicators
+    for col in ['RSI_14', 'MACD_12_26_9']:
+        if col in df.columns:
+            result[f'{col}_zscore'] = (df[col] - df[col].rolling(50).mean()) / df[col].rolling(50).std()
+    
+    return result
+```
+
+#### 2.2 Cross-Asset Features (Your GNN Idea, Simplified First)
+```/dev/null/CrossAssetFeatures.py#L1-L25
+def calculate_correlation_features(asset_data: Dict[str, pd.DataFrame], 
+                                    target_asset: str, 
+                                    lookback: int = 30) -> pd.DataFrame:
+    """
+    Calculate rolling correlations between target and other assets.
+    This is the 'poor man's GNN' - explicit correlation features.
+    """
+    target_returns = asset_data[target_asset]['close'].pct_change()
+    features = pd.DataFrame(index=target_returns.index)
+    
+    for asset_id, df in asset_data.items():
+        if asset_id == target_asset:
+            continue
+        other_returns = df['close'].pct_change()
+        # Rolling correlation
+        features[f'corr_{asset_id}'] = target_returns.rolling(lookback).corr(other_returns)
+        # Lead-lag relationship (does other asset lead by 1 bar?)
+        features[f'lead_{asset_id}'] = target_returns.rolling(lookback).corr(other_returns.shift(1))
+    
+    return features
+```
+
+### Phase 3: Regime Detection
+
+This is **crucial**. Your trend-following strategies will bleed during sideways markets.
+
+#### 3.1 Simple Volatility Regime
+```/dev/null/RegimeDetector.py#L1-L30
+class VolatilityRegimeDetector:
+    def __init__(self, vol_lookback=20, vol_threshold_low=0.01, vol_threshold_high=0.03):
+        self.vol_lookback = vol_lookback
+        self.vol_low = vol_threshold_low
+        self.vol_high = vol_threshold_high
+    
+    def detect_regime(self, data: pd.DataFrame) -> pd.Series:
+        """
+        Returns: LOW_VOL, NORMAL, HIGH_VOL regimes
+        """
+        returns = data['close'].pct_change()
+        realized_vol = returns.rolling(self.vol_lookback).std()
+        
+        conditions = [
+            realized_vol < self.vol_low,
+            realized_vol > self.vol_high
+        ]
+        choices = ['LOW_VOL', 'HIGH_VOL']
+        
+        return pd.Series(
+            np.select(conditions, choices, default='NORMAL'),
+            index=data.index
+        )
+```
+
+#### 3.2 Meta-Strategy Controller
+```/dev/null/MetaStrategy.py#L1-L25
+class RegimeAwareMetaStrategy:
+    """
+    Switch between strategies based on detected regime.
+    """
+    def __init__(self, regime_detector, strategy_map):
+        """
+        strategy_map: {'LOW_VOL': MeanReversionStrategy, 'HIGH_VOL': HoldStrategy, 'NORMAL': TrendStrategy}
+        """
+        self.detector = regime_detector
+        self.strategy_map = strategy_map
+    
+    def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        regime = self.detector.detect_regime(df)
+        df['regime'] = regime
+        
+        # Apply different strategies per regime
+        for regime_type, strategy in self.strategy_map.items():
+            mask = df['regime'] == regime_type
+            if mask.any():
+                regime_data = df[mask]
+                signals = strategy.generate_signal(regime_data)
+                df.loc[mask, 'signal'] = signals['signal']
+        
+        return df
+```
+
+### Phase 4: ML Models for Probabilistic Edge
+
+#### 4.1 XGBoost Classification
+```/dev/null/MLStrategy.py#L1-L40
+import xgboost as xgb
+
+class XGBoostStrategy(BaseStrategy):
+    def __init__(self, config):
+        super().__init__(config)
+        self.model = None
+        self.feature_cols = config.get('feature_cols', [])
+        self.threshold = config.get('probability_threshold', 0.55)  # Only trade with confidence
+    
+    def train(self, train_data: pd.DataFrame, target_col: str = 'target'):
+        """
+        Target: 1 if next_return > 0.5%, 0 otherwise
+        """
+        X = train_data[self.feature_cols]
+        y = train_data[target_col]
+        
+        self.model = xgb.XGBClassifier(
+            n_estimators=100,
+            max_depth=4,
+            learning_rate=0.1,
+            objective='binary:logistic'
+        )
+        self.model.fit(X, y)
+    
+    def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        X = df[self.feature_cols]
+        
+        probabilities = self.model.predict_proba(X)[:, 1]
+        
+        # Only generate signals when confident
+        df['signal'] = SignalTypes.HOLD.value
+        df.loc[probabilities > self.threshold, 'signal'] = SignalTypes.BUY.value
+        df.loc[probabilities < (1 - self.threshold), 'signal'] = SignalTypes.SELL.value
+        
+        return df
+```
+
+---
+
+## Realistic Path to 50% Alpha
+
+Let me be brutally honest: **50% alpha over buy-and-hold is extremely ambitious**. Here's what it actually requires:
+
+### The Math of 50% Alpha
+
+If BTC buy-and-hold returns 100% in a year, you need to return 150%.
+If BTC returns -50%, you need to return -25% (or ideally positive).
+
+This requires:
+1. **High win rate AND good risk/reward** - You can't achieve this with simple TA
+2. **Low correlation to market** - You need to generate returns when market is flat/down
+3. **Superior information processing** - Either faster data, or unique feature combinations
+
+### Realistic Targets
+
+| Strategy Level | Expected Alpha (vs B&H) | Difficulty |
+|----------------|------------------------|------------|
+| Basic TA (current) | -5% to +5% | Easy |
+| Regime-Aware TA | +5% to +15% | Medium |
+| ML with proper features | +10% to +25% | Hard |
+| GNN + RL + Regime | +20% to +40% | Very Hard |
+| Full Stack + Execution Edge | +30% to +60% | Expert |
+
+### What Actually Generates Alpha
+
+1. **Information Edge** - Data others don't have (on-chain metrics, alternative data)
+2. **Speed Edge** - Lower latency execution (expensive infrastructure)
+3. **Analytical Edge** - Better models (requires significant R&D)
+4. **Behavioral Edge** - Exploiting human biases (mean reversion in panic selling)
+
+---
+
+## Recommended Implementation Order
+
+1. **Week 1-2**: Build VectorizedBacktester + Metrics
+   - This lets you measure everything going forward
+   
+2. **Week 3-4**: Validate existing strategies with realistic costs
+   - You'll likely find they lose money after costs
+   
+3. **Week 5-6**: Implement Regime Detection
+   - This alone can add +5-10% alpha by avoiding bad periods
+   
+4. **Week 7-8**: Build Feature Engineering Pipeline
+   - Stationarity transforms
+   - Cross-asset correlations
+   - Volatility features
+   
+5. **Week 9-12**: ML Models
+   - Start with XGBoost (faster iteration)
+   - Move to LSTM/Transformer for sequence modeling
+   
+6. **Month 4+**: GNN and RL
+   - Only after you have a solid validation framework
+
+---
+
+## Final Recommendations
+
+1. **Don't trust any strategy until you backtest it** - Your backtester plan is solid, implement it first.
+
+2. **Use Walk-Forward Validation** - Train on 2020, validate on 2021, test on 2022. Never use future data.
+
+3. **Assume 0.2% round-trip cost minimum** - Commission + slippage + spread.
+
+4. **Target Sharpe > 1.5 before considering alpha** - Risk-adjusted returns matter more than raw returns.
+
+5. **Start with longer timeframes** - 4h/1d candles. Lower frequency = lower costs = easier to profit.
+
+Your plan documents show excellent theoretical understanding. The gap is implementation. Focus on the validation layer first, then systematically build up complexity while measuring each addition's marginal contribution to alpha.
+
