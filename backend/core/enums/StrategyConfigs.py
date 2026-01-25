@@ -30,3 +30,11 @@ class StrategyConfigs(Enum):
         "rsi_buy_threshold": 40,
         "rsi_sell_threshold": 60,
     }
+    VOTING = {
+        "strategies": [],
+        "min_votes": 1,
+    }
+    COMPOSITE = {
+        "primary_strategy": {},
+        "filter_strategies": [],
+    }
