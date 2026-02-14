@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 
@@ -8,18 +7,24 @@ from backend.etl.extractors.PolygonCryptoExtractor import PolygonCryptoExtractor
 from backend.etl.extractors.PolygonForexExtractor import PolygonForexExtractor
 from backend.etl.extractors.PolygonStockExtractor import PolygonStockExtractor
 
+skip_if_no_key = pytest.mark.skipif(
+    not (os.getenv("POLYGON_API_KEY") or os.getenv("MASSIVE_API_KEY")),
+    reason="Polygon API key not found in environment"
+)
 
+
+@skip_if_no_key
 @pytest.mark.contract
 def test_polygon_stock_extractor_contract():
     extractor = PolygonStockExtractor()
 
     # 1. Test asset listing
-    assets = extractor.get_listed_assets(limit=10000)
+    assets = extractor.get_listed_assets(limit=10)
     assert isinstance(assets, list)
     assert len(assets) > 0
 
     # Pick first 2 assets
-    sample_assets = [a for a in assets[5000:5002]]
+    sample_assets = [a for a in assets[:2]]
     asset_ids = [n["id"] for n in sample_assets]
 
     # 2. Test latest data
@@ -42,9 +47,9 @@ def test_polygon_stock_extractor_contract():
             assert isinstance(historical_data[aid], list)
 
 
+@skip_if_no_key
 @pytest.mark.contract
 def test_polygon_crypto_extractor_contract():
-    time.sleep(15)
     extractor = PolygonCryptoExtractor()
 
     # 1. Test asset listing
@@ -70,9 +75,9 @@ def test_polygon_crypto_extractor_contract():
     assert isinstance(historical_data, dict)
 
 
+@skip_if_no_key
 @pytest.mark.contract
 def test_polygon_forex_extractor_contract():
-    time.sleep(15)
     extractor = PolygonForexExtractor()
 
     # 1. Test asset listing

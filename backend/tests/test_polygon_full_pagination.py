@@ -1,9 +1,18 @@
+import os
+
 import pytest
 
 from backend.etl.extractors.PolygonCryptoExtractor import PolygonCryptoExtractor
 from backend.etl.extractors.PolygonStockExtractor import PolygonStockExtractor
 
 
+skip_if_no_key = pytest.mark.skipif(
+    not (os.getenv("POLYGON_API_KEY") or os.getenv("MASSIVE_API_KEY")),
+    reason="Polygon API key not found in environment"
+)
+
+
+@skip_if_no_key
 @pytest.mark.contract
 def test_pagination_exhaustion():
     """
@@ -21,6 +30,7 @@ def test_pagination_exhaustion():
     assert isinstance(assets[0], dict)
 
 
+@skip_if_no_key
 @pytest.mark.contract
 def test_pagination_exact_limit():
     """
@@ -28,10 +38,10 @@ def test_pagination_exact_limit():
     when it spans multiple pages.
     """
     extractor = PolygonStockExtractor()
-    # Request 2500 items. Should trigger 3 requests (1000, 1000, 500).
-    # Since we have 5 requests/min bucket, this should be fast.
+    # Request 5500 items. Should trigger 6 requests (1000 * 5, 500).
+    # Since we have 5 requests/min bucket, this should be fast enough.
     assets = extractor.get_listed_assets(limit=5500)
 
     print(f"Stock assets found: {len(assets)}")
-    assert len(assets) >= 5000
+    assert len(assets) == 5500
     assert isinstance(assets[0], dict)

@@ -14,6 +14,7 @@ class PolygonCryptoExtractor(PolygonBaseExtractor):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.exchange = Exchange.POLYGON_CRYPTO.value
+        self.market_type = "crypto"
 
     def get_listed_assets(self, market: str = "crypto", active: bool = True, limit: int = 1000, **kwargs) -> List[Dict[str, Any]]:
         """
@@ -38,68 +39,6 @@ class PolygonCryptoExtractor(PolygonBaseExtractor):
         except Exception as e:
             self.logger.exception(f"Error fetching listed crypto assets from Polygon: {e}")
             return []
-
-    def get_historical_data_for_assets(
-        self,
-        asset_ids: List[str],
-        interval: DataIntervals = DataIntervals.ONE_DAY,
-        from_date: Optional[Union[str, datetime]] = None,
-        to_date: Optional[Union[str, datetime]] = None,
-        limit: int = 5000,
-        **kwargs,
-    ) -> Dict[str, Any]:
-        if not from_date:
-            from_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
-        if not to_date:
-            to_date = datetime.now().strftime("%Y-%m-%d")
-
-        multiplier, timespan = self._map_interval(interval)
-        
-        results = {}
-        for asset_id in asset_ids:
-            try:
-                with self.rate_limiter_manager.get_limiter("default"):
-                    aggs = self.client.get_aggs(
-                        ticker=asset_id,
-                        multiplier=multiplier,
-                        timespan=timespan,
-                        from_=from_date,
-                        to=to_date,
-                        limit=limit,
-                        **kwargs
-                    )
-                results[asset_id] = [vars(a) for a in aggs] if aggs else []
-            except Exception as e:
-                self.logger.error(f"Error fetching historical crypto data for {asset_id}: {e}")
-                results[asset_id] = []
-        
-        return results
-
-    def get_market_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
-        results = {}
-        for asset_id in asset_ids:
-            try:
-                with self.rate_limiter_manager.get_limiter("default"):
-                    prev_close = self.client.get_previous_close_agg(ticker=asset_id)
-                results[asset_id] = [vars(a) for a in prev_close] if prev_close else []
-            except Exception as e:
-                self.logger.error(f"Error fetching market crypto data for {asset_id}: {e}")
-                results[asset_id] = []
-        return results
-
-    def get_latest_data_for_assets(self, asset_ids: List[str], **kwargs) -> Dict[str, Any]:
-        results = {}
-        try:
-            with self.rate_limiter_manager.get_limiter("default"):
-                snapshot = self.client.get_snapshot_all(
-                    market_type="crypto", 
-                    tickers=",".join(asset_ids) if asset_ids else None
-                )
-            for s in snapshot:
-                results[s.ticker] = vars(s)
-        except Exception as e:
-            self.logger.error(f"Error fetching latest crypto data for assets: {e}")
-        return results
 
     def run_extraction(self):
         self.logger.info("Starting Polygon Crypto extraction pipeline...")
