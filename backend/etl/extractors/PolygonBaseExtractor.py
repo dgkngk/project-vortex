@@ -29,7 +29,7 @@ class PolygonBaseExtractor(BaseExtractor):
 
     def __init__(self, **kwargs):
         self.config = AppConfig()
-        self.api_key = self.config.polygon_api_key or os.getenv("MASSIVE_API_KEY")
+        self.api_key = self.config.polygon_api_key
 
         if not self.api_key:
             VortexLogger(name=self.__class__.__name__).warning(
@@ -138,7 +138,7 @@ class PolygonBaseExtractor(BaseExtractor):
             try:
                 with self.rate_limiter_manager.get_limiter("default"):
                     prev_close = self.client.get_previous_close_agg(ticker=asset_id)
-                results[asset_id] = [vars(a) for a in prev_close] if prev_close else []
+                results[asset_id] = [vars(prev_close)] if prev_close else []
             except Exception as e:
                 self.logger.error(f"Error fetching market data for {asset_id}: {e}")
                 results[asset_id] = []

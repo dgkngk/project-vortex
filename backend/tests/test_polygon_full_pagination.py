@@ -2,12 +2,13 @@ import os
 
 import pytest
 
+from backend.core.Config import AppConfig
 from backend.etl.extractors.PolygonCryptoExtractor import PolygonCryptoExtractor
 from backend.etl.extractors.PolygonStockExtractor import PolygonStockExtractor
 
 
 skip_if_no_key = pytest.mark.skipif(
-    not (os.getenv("POLYGON_API_KEY") or os.getenv("MASSIVE_API_KEY")),
+    not AppConfig().polygon_api_key,
     reason="Polygon API key not found in environment"
 )
 
