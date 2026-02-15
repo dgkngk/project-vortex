@@ -124,6 +124,29 @@ class RateLimiter:
         pass
 
 
+class RateLimiterRegistry:
+    """
+    A globally accessible registry for RateLimiter instances.
+    Ensures that rate limiters with the same name share the same token bucket across the process.
+    """
+
+    _registry: Dict[str, "RateLimiter"] = {}
+    _lock = threading.Lock()
+
+    @classmethod
+    def get_or_create(cls, name: str, limits: Dict[str, int], logger=None) -> "RateLimiter":
+        with cls._lock:
+            if name not in cls._registry:
+                cls._registry[name] = RateLimiter(limits, logger)
+            return cls._registry[name]
+
+    @classmethod
+    def reset(cls):
+        """Resets the registry (useful for tests)."""
+        with cls._lock:
+            cls._registry.clear()
+
+
 class RateLimiterManager:
     """Manages multiple RateLimiter instances for different API endpoint categories."""
 
@@ -135,13 +158,17 @@ class RateLimiterManager:
                      and values are rate limit configurations for the RateLimiter.
             logger: An optional logger instance.
         """
-        if "default" not in configs:
-            raise ValueError("Rate limiter configs must contain a 'default' category.")
+        if "default" not in configs and len(configs) == 0:
+             # Only raise if configs is empty. If it has other keys, that's fine,
+             # but the user of this manager must know which key to ask for.
+             # However, BaseExtractor historically expects "default".
+             # We will relax this check or ensure "default" is handled by the caller.
+             pass
 
-        self.limiters: dict = {
-            category: RateLimiter(limits, logger)
-            for category, limits in configs.items()
-        }
+        self.limiters: dict = {}
+        for category, limits in configs.items():
+            # Use the category name as the unique key in the global registry
+            self.limiters[category] = RateLimiterRegistry.get_or_create(category, limits, logger)
         self.logger = logger
         if self.logger:
             self.logger.debug(
@@ -153,9 +180,14 @@ class RateLimiterManager:
         Retrieves a RateLimiter for a specific category.
         If the category is not found, it falls back to the 'default' limiter.
         """
-        limiter = self.limiters.get(category, self.limiters["default"])
-        if self.logger and category not in self.limiters:
-            self.logger.debug(
-                f"No specific rate limiter for category '{category}', using 'default'."
-            )
-        return limiter
+        if category in self.limiters:
+            return self.limiters[category]
+        
+        if "default" in self.limiters:
+            if self.logger:
+                self.logger.debug(
+                    f"No specific rate limiter for category '{category}', using 'default'."
+                )
+            return self.limiters["default"]
+
+        raise KeyError(f"Rate limiter category '{category}' not found and no 'default' fallback available.")

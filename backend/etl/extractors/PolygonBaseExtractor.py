@@ -42,7 +42,8 @@ class PolygonBaseExtractor(BaseExtractor):
         super().__init__(
             api_base_url="https://api.massive.com",
             # Default rate limit for free tier
-            rate_limit_configs={"default": {"requests_per_minute": 5}},
+            rate_limit_configs={"polygon_global": {"requests_per_minute": 5}},
+            default_limiter_category="polygon_global",
             logger=VortexLogger(name=self.__class__.__name__, level="INFO"),
             **kwargs,
         )
@@ -115,7 +116,7 @@ class PolygonBaseExtractor(BaseExtractor):
         results = {}
         for asset_id in asset_ids:
             try:
-                with self.rate_limiter_manager.get_limiter("default"):
+                with self.rate_limiter_manager.get_limiter(self.default_limiter_category):
                     aggs = self.client.get_aggs(
                         ticker=asset_id,
                         multiplier=multiplier,
@@ -136,7 +137,7 @@ class PolygonBaseExtractor(BaseExtractor):
         results = {}
         for asset_id in asset_ids:
             try:
-                with self.rate_limiter_manager.get_limiter("default"):
+                with self.rate_limiter_manager.get_limiter(self.default_limiter_category):
                     prev_close = self.client.get_previous_close_agg(ticker=asset_id)
                 results[asset_id] = [vars(prev_close)] if prev_close else []
             except Exception as e:
@@ -151,7 +152,7 @@ class PolygonBaseExtractor(BaseExtractor):
              return results
 
         try:
-            with self.rate_limiter_manager.get_limiter("default"):
+            with self.rate_limiter_manager.get_limiter(self.default_limiter_category):
                 snapshot = self.client.get_snapshot_all(
                     market_type=self.market_type, 
                     tickers=",".join(asset_ids) if asset_ids else None
