@@ -159,10 +159,7 @@ class RateLimiterManager:
             logger: An optional logger instance.
         """
         if "default" not in configs and len(configs) == 0:
-             # Only raise if configs is empty. If it has other keys, that's fine,
-             # but the user of this manager must know which key to ask for.
-             # However, BaseExtractor historically expects "default".
-             # We will relax this check or ensure "default" is handled by the caller.
+             # Empty configs is allowed; specific categories can be requested if they exist in registry.
              pass
 
         self.limiters: dict = {}

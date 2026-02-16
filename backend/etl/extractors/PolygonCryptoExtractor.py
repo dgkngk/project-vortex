@@ -1,7 +1,5 @@
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
-from backend.core.enums.AssetEnums import DataIntervals
 from backend.core.enums.ExchangeEnums import Exchange
 from backend.etl.extractors.PolygonBaseExtractor import PolygonBaseExtractor
 

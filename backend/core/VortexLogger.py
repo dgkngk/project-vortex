@@ -7,11 +7,23 @@ from typing import Union
 
 class VortexLogger(object):
 
+    _instance = None
+    _initialized = False
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(VortexLogger, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self, name: str, level: Union[int, str] = "DEBUG"):
+        if self.__class__._initialized:
+            return
+
         self.__logger = logging.getLogger(name)
         self.__level = level
         self.__name = name
         self.__logger.setLevel(level)
+        self.__class__._initialized = True
         self.__formatter = logging.Formatter(
             "%(asctime)-15s %(levelname)s > %(module)s: %(message)s"
         )

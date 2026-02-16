@@ -205,7 +205,7 @@ class BaseExtractor(ABC):
         pass
 
     @abstractmethod
-    def run_extraction(self):
+    def run_extraction(self) -> Any:
         """
         Main method that coordinates extraction from the API.
         Should internally call other methods as needed and prepare data for transformation/loading.

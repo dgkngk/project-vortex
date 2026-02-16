@@ -1,4 +1,4 @@
-import os
+
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
@@ -40,7 +40,7 @@ class PolygonBaseExtractor(BaseExtractor):
         self.market_type = None  # To be set by subclasses
 
         super().__init__(
-            api_base_url="https://api.massive.com",
+            api_base_url="https://api.polygon.io",
             # Default rate limit for free tier
             rate_limit_configs={"polygon_global": {"requests_per_minute": 5}},
             default_limiter_category="polygon_global",
@@ -81,7 +81,7 @@ class PolygonBaseExtractor(BaseExtractor):
                     url = response["next_url"]
                     
                     # Security check for SSRF
-                    if not url.startswith(self.api_base_url):
+                    if not url.startswith("https://api.polygon.io"):
                         self.logger.error(f"Potential SSRF detected. Refusing to follow next_url: {url}")
                         break
 
