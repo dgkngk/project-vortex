@@ -1,0 +1,47 @@
+services:
+  # The Vortex Application
+  app:
+    build: .
+    container_name: vortex-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app # Mount source code for live reloading
+      - ./data:/app/data # Persist parquet data
+    environment:
+      - REDIS_HOST=redis
+      - INFLUXDB_HOST=influxdb
+      - VORTEX_DATA_DIR=/app/data/parquet
+      # Add other env vars from .env here or use env_file
+    depends_on:
+      - redis
+      - influxdb
+    command: uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Hot Storage (Cache)
+  redis:
+    image: redis:alpine
+    container_name: vortex-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Warm Storage (Time-Series)
+  influxdb:
+    image: influxdb:2.7
+    container_name: vortex-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=vortex
+      - DOCKER_INFLUXDB_INIT_BUCKET=market_data
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+volumes:
+  redis_data:
+  influxdb_data:
