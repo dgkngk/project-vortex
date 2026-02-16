@@ -36,6 +36,7 @@ def sample_dataframe() -> pd.DataFrame:
     })
 
 
+@pytest.mark.contract
 class TestParquetWriter:
     """Unit tests for ParquetWriter."""
 

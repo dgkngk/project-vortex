@@ -41,6 +41,7 @@ def seeded_store(
     return data_store
 
 
+@pytest.mark.contract
 class TestHistoricalDataStore:
     """Unit tests for HistoricalDataStore."""
 

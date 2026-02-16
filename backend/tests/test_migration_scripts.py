@@ -17,6 +17,7 @@ def migration() -> MigrationScripts:
     return MigrationScripts()
 
 
+@pytest.mark.unit
 class TestMigrationScripts:
     """Unit tests for MigrationScripts."""
 

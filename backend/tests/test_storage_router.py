@@ -12,6 +12,7 @@ def _make_mock_destination() -> MagicMock:
     return mock
 
 
+@pytest.mark.unit
 class TestStorageRouter:
     """Unit tests for StorageRouter."""
 
