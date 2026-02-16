@@ -29,7 +29,7 @@
 
 **Directory Structure:**
 ```
-backend/etl/storage/
+backend/etl/data_access/storage/
 ├── __init__.py
 ├── StorageRouter.py         # Routes data to appropriate tier
 ├── HistoricalDataStore.py   # DuckDB wrapper for cold store queries
