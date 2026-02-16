@@ -21,9 +21,11 @@ class BaseExtractor(ABC):
         api_base_url: str,
         rate_limit_configs: Optional[Dict[str, Dict[str, int]]] = None,
         logger: Optional[VortexLogger] = None,
+        default_limiter_category: str = "default",
         **kwargs,
     ):
         self.api_base_url = api_base_url
+        self.default_limiter_category = default_limiter_category
         self.logger = logger or VortexLogger(
             name=self.__class__.__name__, level="DEBUG"
         )
@@ -39,14 +41,14 @@ class BaseExtractor(ABC):
         self,
         url: str,
         params: Optional[Dict[str, Any]] = None,
-        category: str = "default",
+        category: Optional[str] = None,
         retries: int = 3,
         backoff_factor: float = 0.5,
     ) -> dict:
         """
         Makes a synchronous HTTP GET request with rate limiting and retry logic.
         """
-        limiter = self.rate_limiter_manager.get_limiter(category)
+        limiter = self.rate_limiter_manager.get_limiter(category or self.default_limiter_category)
         for attempt in range(retries):
             with limiter:
                 try:
@@ -77,14 +79,14 @@ class BaseExtractor(ABC):
         session: aiohttp.ClientSession,
         url: str,
         params: Optional[Dict[str, Any]] = None,
-        category: str = "default",
+        category: Optional[str] = None,
         retries: int = 3,
         backoff_factor: float = 0.5,
     ):
         """
         Makes an asynchronous HTTP GET request within a session, with rate limiting and retry logic.
         """
-        limiter = self.rate_limiter_manager.get_limiter(category)
+        limiter = self.rate_limiter_manager.get_limiter(category or self.default_limiter_category)
         for attempt in range(retries):
             async with limiter:
                 try:
@@ -203,7 +205,7 @@ class BaseExtractor(ABC):
         pass
 
     @abstractmethod
-    def run_extraction(self):
+    def run_extraction(self) -> Any:
         """
         Main method that coordinates extraction from the API.
         Should internally call other methods as needed and prepare data for transformation/loading.
