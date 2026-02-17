@@ -17,6 +17,7 @@ addopts = "-ra --strict-markers"
 
 [tool.poetry.group.dev.dependencies]
 matplotlib = "^3.10.7"
+jupyterlab = "^4.5.4"
 
 [project]
 name = "project-vortex"
