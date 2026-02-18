@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from backend.scitus.backtest.slippage.FixedSlippage import FixedSlippage
 from backend.scitus.backtest.slippage.VolumeWeightedSlippage import VolumeWeightedSlippage
-from backend.scitus.backtest.slippage.VolatilitySlippage import VolatilitySlippage
+from backend.scitus.backtest.slippage.RollingStdDevSlippage import RollingStdDevSlippage
 
 @pytest.fixture
 def sample_data():
@@ -47,10 +47,10 @@ def test_volume_weighted_slippage(sample_data):
     assert cost.iloc[3] == pytest.approx(expected4)
 
 @pytest.mark.unit
-def test_volatility_slippage(sample_data):
+def test_rolling_std_slippage(sample_data):
     # Mock return series for internal calc
     # Close: 100, 101, 102, 103, 104 -> ~1% returns each step
-    model = VolatilitySlippage(atr_period=2, multiplier=1.0)
+    model = RollingStdDevSlippage(atr_period=2, multiplier=1.0)
     
     cost = model.calculate(sample_data["trades"], sample_data["volume"], sample_data["close"])
     

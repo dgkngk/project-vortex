@@ -17,7 +17,10 @@ class VolumeWeightedSlippage(BaseSlippage):
         
         # Impact factor: sqrt(trade_units / volume_units)
         # Note: 'trades' is units, 'volume' is units.
-        impact = np.sqrt(trades / safe_volume).fillna(0)
+        # Compute impact only where volume is valid to avoid dividing by zero/NaN.
+        impact = pd.Series(0.0, index=trades.index)
+        valid_mask = safe_volume.notna() & (safe_volume > 0) & trades.notna()
+        impact.loc[valid_mask] = np.sqrt(trades.loc[valid_mask] / safe_volume.loc[valid_mask])
         
         # Slippage Rate = Base * Impact
         slippage_rate = self.base_slippage * impact

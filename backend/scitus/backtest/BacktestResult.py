@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any
 
 import pandas as pd
-import plotly.graph_objects as go
+import pandas as pd
 
 
 @dataclass
@@ -39,11 +39,21 @@ class BacktestResult:
         Serialize results for API response.
         Handles NaN/Inf values for JSON compliance.
         """
+        # Safely handle cases where trades may be empty or None
+        if isinstance(self.trades, pd.DataFrame) and not self.trades.empty:
+            # Preserve numeric types in trades; only stringify datetime-like columns
+            trades_df = self.trades.copy()
+            datetime_cols = trades_df.select_dtypes(include=["datetime", "datetimetz"]).columns
+            if len(datetime_cols) > 0:
+                trades_df[datetime_cols] = trades_df[datetime_cols].astype(str)
+            trades_data = trades_df.to_dict(orient="records")
+        else:
+            trades_data = []
+
         return {
             "metrics": self.metrics,
             "metadata": self.metadata,
-            "trades": self.trades.astype(str).to_dict(orient="records"),
-            # Equity curve sampled for lightweight frontend? Or full?
-            # For now full, convert index to string
-            "equity_curve": self.equity_curve.fillna(0).to_dict(),
+            "trades": trades_data,
+            # Use None for NaNs to be JSON compliant (null)
+            "equity_curve": self.equity_curve.where(pd.notna(self.equity_curve), None).to_dict(),
         }

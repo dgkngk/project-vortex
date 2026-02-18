@@ -32,7 +32,7 @@ def test_pagination_exhaustion():
 
 
 @skip_if_no_key
-@pytest.mark.contract
+@pytest.mark.slow
 def test_pagination_exact_limit():
     """
     Test that the extractor stops exactly at the requested limit

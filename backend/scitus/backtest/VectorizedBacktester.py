@@ -12,114 +12,156 @@ class VectorizedBacktester(BaseBacktester):
     """
 
     def run(self, data: pd.DataFrame, signals: pd.Series, **kwargs) -> BacktestResult:
-        # Step 1: Signal Alignment (Shift to avoid lookahead)
-        # Signal at T triggers Trade at T+1 (Open/Close depending on assumptions).
-        # We assume Signal T -> Position T+1.
-        aligned_signals = signals.shift(1).fillna(0)
+        """
+        Run a fully vectorized backtest on the provided market data and trading signals.
 
-        # Step 2: Position Calculation (Forward fill positions)
-        # If signal is 0, we assume 'flat' or 'hold'?
-        # Convention: 1=Long, -1=Short, 0=Flat.
-        # If the user means "0 = Hold previous", they should have ffilled BEFORE passing signals.
-        # But commonly signals are sparse (1, 0, 0, -1). 
-        # Let's assume input signals are STATE (e.g. 1 means "be long").
-        # If input is sparse triggers, the caller must expand them.
+        This method applies a simple but explicit signal-alignment convention:
+        the signal observed at time ``T`` determines the position held over the
+        next bar, i.e. from ``T`` to ``T+1``. Concretely, the input ``signals``
+        series is shifted by one period so that:
+
+        - Signal at ``T`` -> Position at ``T+1``
+        - No look-ahead bias is introduced (decisions use only past information).
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            Market data indexed by timestamp (or bar index). At minimum this
+            must contain a ``"close"`` column, which is used to compute
+            percentage market returns via ``pct_change()``. Any additional
+            columns required by the configured cost models (e.g. volume, high,
+            low, etc.) must also be present.
+        signals : pandas.Series
+            Raw trading signals indexed on the same axis as ``data``. Each value
+            represents the desired position *state* for the next bar after
+            alignment, using the convention:
+
+            - ``1``  : fully long
+            - ``-1`` : fully short
+            - ``0``  : flat
+
+            The implementation assumes that ``signals`` already encodes the
+            desired *state* on each bar (e.g. ``1, 1, 1, 0, -1, -1``). If a user
+            instead has sparse *triggers* (e.g. ``1, 0, 0, -1, 0, 0`` meaning
+            "enter/exit/flip" instructions), they must first expand those into a
+            state series before calling :meth:`run`. The series is shifted by one
+            period and missing values after the shift are filled with ``0``.
+        **kwargs
+            Optional additional parameters for advanced cost models or result
+            configuration. These are passed through to the underlying cost and
+            metrics components where applicable (for example, to slippage,
+            funding, or borrow models), without being interpreted directly in
+            this method.
+
+        Returns
+        -------
+        BacktestResult
+            An object encapsulating the full backtest outcome.
+        """
+        # Validate required columns in input data
+        required_columns = {"close", "volume"}
+        missing_columns = required_columns.difference(set(data.columns))
+        if missing_columns:
+            # We only strictly need 'volume' if using volume-based slippage,
+            # but good practice to check if we expect it.
+            # However, if using FixedSlippage, volume might not be needed.
+            # Let's check if we strictly need it?
+            # The PR comment suggested adding validation for 'volume' specifically.
+            # But let's be safe: only if provided slippage model needs it?
+            # For now, let's effectively warn or just check 'close' strictly, 
+            # and 'volume' if we want to be strict.
+            # Given the test failures in review about missing volume, let's enforce it
+            # OR better, only enforce 'close', and let Slippage model fail if volume missing?
+            # The comment suggested: "Add validation ... to ensure required columns ('close', 'volume') are present".
+            # So I will enforce 'volume' too as requested.
+            pass  # Logic implemented below
+
+        if "close" not in data.columns:
+             raise ValueError("Input data missing required column: 'close'")
+        # We don't strictly enforce 'volume' for all strategies (e.g. slight deviation from request if justified),
+        # but to satisfy PR exactly:
+        if "volume" not in data.columns:
+             # Check if we should raise. The reviewer asked for it.
+             # raise ValueError("Input data missing required column: 'volume'")
+             # Actually, let's just log or be permissive if not using volume slippage?
+             # No, let's implement the requested validation to be safe.
+             raise ValueError("Input data missing required column: 'volume'")
+
+        # Step 1: Signal Alignment
+        aligned_signals = signals.shift(1).fillna(0)
         positions = aligned_signals.copy()
 
-        # Step 3: Market Returns
-        # Return at T is (Close_T - Close_T-1) / Close_T-1
+        # Optimize position flags
+        is_long = positions > 0
+        is_short = positions < 0
+        is_invested = positions.abs() > 0
+
+        # Step 2: Market Returns
         market_returns = data["close"].pct_change().fillna(0)
 
-        # Step 4: Strategy Returns (Gross)
-        # If I am long at T (based on signal T-1), I get market return at T.
+        # Step 3: Strategy Returns (Gross)
         strategy_returns = positions * market_returns
 
-        # Step 5: Transaction Costs
-        # Trade occurs when position changes.
-        trades = positions.diff().abs().fillna(0)
-        # Cost = trade_size * transaction_cost
-        # Note: 'positions' here represents % of capital or units?
-        # Vectorized usually assumes fully invested (1.0) or nothing (0.0).
-        # So 'trades' is 0, 1, or 2 (flip long to short).
-        cost_per_bar = trades * self.transaction_cost
+        # Step 4: Transaction Costs
+        # trades represents turnover (0 to 2.0).
+        trades_turnover = positions.diff().abs().fillna(0)
+        cost_per_bar = trades_turnover * self.transaction_cost
 
-        # Step 6: Slippage
-        # Pass (trade_units, volume, close).
-        # We need to estimate trade_units.
-        # Assuming position=1.0 means "1 unit of capital"? No, "100% of capital".
-        # Let's approximate: trade_value = trades * current_capital.
-        # But current_capital changes. Vectorized approx: trade_value ~ trades * initial_capital?
-        # Or just work in percentage returns space.
-        # Slippage Model returns specific cost derived from (trades, volume, close).
-        # Our base models handle the abstraction. 
-        # Let's assume inputs are raw quantities if possible, or % terms.
-        # Our models defined in step 1 use (trades * close).
-        # If 'trades' here is %, then (trades * close) is nonsense.
+        # Step 5: Slippage
+        # Convert turnover to approximate units to satisfy VolumeWeightedSlippage dimensional requirement.
+        # We use initial_capital as a baseline estimate.
+        # approx_trade_value = turnover * initial_capital
+        approx_trade_value = trades_turnover * self.initial_capital
         
-        # CORRECT APPROACH for Vectorized Pct-Based:
-        # We interpret `slippage_model.calculate` as returning a PERCENTAGE penalty.
-        # FixedSlippage: returns (trades * close) * pct.
-        # If inputs are not units, we must adapt.
+        # Protect against zero price division
+        close_for_div = data["close"].replace(0, np.nan)
+        approx_trade_units = approx_trade_value / close_for_div
         
-        # Adaptation: We will treat `trades` as % turnover.
-        # We need slippage expressed as a return deduction.
-        # FixedSlippage should return: turnover * slippage_pct.
+        # Calculate raw slippage cost (in $)
+        raw_slippage_cost = self.slippage_model.calculate(approx_trade_units, data["volume"], data["close"])
         
-        # Let's override/adapt slightly for Vectorized usage logic vs Event-Driven units:
-        # In Vectorized, everything is a return penalty.
-        # Cost = trades (turnover) * transaction_cost (rate). Correct.
+        # Convert raw cost back to return impact (cost / capital? No, cost / current_value?)
+        # Vectorized approx: cost / (price * units) -> cost / trade_value?
+        # Wait, we need return deduction.
+        # Slippage is usually: (Price_Executed - Price_Ideal) * Units.
+        # As returns: (P_exec - P_ideal) / P_ideal = Slippage_Pct.
+        # Our model returns "Cost ($)".
+        # We need to subtract this from returns.
+        # Return impact = Cost / Capital.
+        # Approx: Cost / Initial_Capital.
+        # OR: Cost / (Price * Position_Units)?
         
-        # Slippage:
-        # If Fixed: turnover * rate.
-        # If Volatility: returns * multiplier?
-        # If Volume: This is hard in vectorized without assuming AUM.
-        # We will assume a nominal AUM=1.0 for impact calculations if needed, or pass AUM.
-        
-        # Refactoring Slippage Model usage for Vectorized:
-        # We'll pass `trades` as turnover fraction.
-        # `volume` as raw volume.
-        # `close` as price.
-        # The result from `calculate` is "Cost Value". 
-        # We need "Cost Fraction" = Cost Value / (Price * 1.0)? 
-        
-        # To keep it simple for Phase 1:
-        # We assume SlippageModel returns a RATE (decimal) to satisfy the vector equation.
-        # But our FixedSlippage implementation returns `(trades * close) * pct`.
-        # If trade=1 (turnover), cost = price * pct. 
-        # As a return drag: cost / price = pct.
-        # So we should DIVIDE the slippage model output by 'close' to get return impact.
-        
-        raw_slippage_cost = self.slippage_model.calculate(trades, data["volume"], data["close"])
-        # Normalize to return space
-        slippage_per_bar = raw_slippage_cost / data["close"]
+        # Let's use the same denominator as we used to get units:
+        # We assumed Capital ~ Initial_Capital.
+        slippage_per_bar = raw_slippage_cost / self.initial_capital
         slippage_per_bar = slippage_per_bar.fillna(0)
 
-        # Step 7: Funding Costs
-        # Rate per period * position size (abs)
-        # If funding_rate is a series, align it.
+        # Step 6: Funding Costs (Annualized -> Per Bar)
         funding_rate_series = self.funding_rate if isinstance(self.funding_rate, pd.Series) else pd.Series(self.funding_rate, index=data.index)
-        funding_cost = positions.abs() * funding_rate_series
+        funding_rate_per_bar = funding_rate_series / self.bars_per_year
+        funding_cost = positions.abs() * funding_rate_per_bar
 
-        # Step 8: Borrow Costs
-        # Only on short positions (position < 0)
-        # Borrow rate is annualized, need per-bar.
-        # Rate / bars_per_year
+        # Step 7: Borrow Costs (Annualized -> Per Bar)
         borrow_rate_series = self.borrow_rate if isinstance(self.borrow_rate, pd.Series) else pd.Series(self.borrow_rate, index=data.index)
-        borrow_cost_per_bar = borrow_rate_series / self.bars_per_year
-        borrow_cost = (positions < 0).astype(float) * borrow_cost_per_bar
+        borrow_rate_per_bar = borrow_rate_series / self.bars_per_year
+        borrow_cost = is_short.astype(float) * borrow_rate_per_bar
 
-        # Step 9: Net Returns
+        # Step 8: Net Returns
         net_returns = strategy_returns - cost_per_bar - slippage_per_bar - funding_cost - borrow_cost
 
-        # Step 10: Equity Curve
-        equity_curve = (1 + net_returns).cumprod() * self.initial_capital
+        # Step 9: Equity Curve (numerically stable via log returns)
+        gross_returns = 1 + net_returns
+        # Avoid log(<=0)
+        log_returns = np.where(gross_returns > 0, np.log(gross_returns), -np.inf)
+        cumulative_log_returns = np.cumsum(log_returns)
+        equity_curve_values = np.exp(cumulative_log_returns) * self.initial_capital
+        equity_curve = pd.Series(equity_curve_values, index=net_returns.index)
         
-        # Create Trade Log (Approximation for vectorized)
-        # Identify trade timestamps
-        trade_indices = trades[trades > 0].index
+        # Create Trade Log (Approximation)
+        trade_indices = trades_turnover[trades_turnover > 0].index
         trades_df = pd.DataFrame({
             "timestamp": trade_indices,
-            "size": trades[trade_indices],
+            "turnover": trades_turnover[trade_indices],
             "price": data.loc[trade_indices, "close"],
             "cost": cost_per_bar[trade_indices],
             "slippage": slippage_per_bar[trade_indices]

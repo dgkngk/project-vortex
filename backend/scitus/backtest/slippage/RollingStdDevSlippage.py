@@ -1,11 +1,10 @@
 import pandas as pd
-import pandas_ta as ta
 from backend.scitus.backtest.slippage.BaseSlippage import BaseSlippage
 
-class VolatilitySlippage(BaseSlippage):
+class RollingStdDevSlippage(BaseSlippage):
     """
-    Slippage estimates based on recent volatility (ATR).
-    Model: slippage_price = ATR(period) * multiplier
+    Slippage estimates based on recent volatility (Rolling Standard Deviation).
+    Model: slippage_price = StdDev(period) * multiplier
     Cost = trades * slippage_price
     """
 

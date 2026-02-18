@@ -20,10 +20,14 @@ class MetricsCalculator:
         metrics = {}
         
         # Basic Return Metrics
-        total_return = (equity.iloc[-1] / equity.iloc[0]) - 1 if not equity.empty else 0.0
+        total_return = (
+            (equity.iloc[-1] / equity.iloc[0]) - 1
+            if (len(equity) > 0 and equity.iloc[0] > 0)
+            else 0.0
+        )
         
         years = len(equity) / bars_per_year if len(equity) > 0 else 0
-        if years > 0 and equity.iloc[-1] > 0:
+        if years > 0 and not equity.empty and equity.iloc[0] > 0 and equity.iloc[-1] > 0:
             cagr = (equity.iloc[-1] / equity.iloc[0]) ** (1 / years) - 1
         else:
             cagr = 0.0
@@ -53,13 +57,11 @@ class MetricsCalculator:
     def _sortino(returns: pd.Series, bars_per_year: int) -> float:
         if returns.empty:
             return 0.0
+        # Sortino uses downside deviation (std of negative returns) as denominator
         downside = returns[returns < 0]
-        if downside.empty or downside.std() == 0:
+        if downside.empty:
             return 0.0
-        
-        # Sortino uses downside dev as denominator
-        std_down = downside.std() 
-        # Some defs use sqrt(mean(downside^2)). Let's use std of negative returns for simplicity + consistency
+            
         # Strict definition: sqrt(mean(min(0, r)^2))
         downside_std = np.sqrt(np.mean(np.minimum(0, returns)**2))
         
@@ -106,6 +108,7 @@ class MetricsCalculator:
         gross_loss = abs(returns[returns < 0].sum())
         
         if gross_loss == 0:
-            return float('inf') if gross_profit > 0 else 0.0
+             # Return a large finite number to avoid JSON serialization issues with Infinity
+            return 100.0 if gross_profit > 0 else 0.0
             
         return gross_profit / gross_loss
