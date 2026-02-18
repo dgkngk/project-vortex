@@ -1,0 +1,200 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\DogukanG÷k\AppData\Local\pypoetry\Cache\virtualenvs\project-vortex-RDTqcRqu-py3.13\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\DogukanG÷k\workspace\personal\project-vortex
+configfile: pyproject.toml
+plugins: anyio-4.10.0
+collecting ... collected 4 items
+
+backend/tests/test_vectorized_backtester.py::test_buy_and_hold_perfect 
+--- Vectorized Debug ---
+Market Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, Name: close, dtype: float64
+Positions:
+ 2023-01-01    0.0
+2023-01-02    1.0
+2023-01-03    1.0
+2023-01-04    1.0
+2023-01-05    1.0
+Freq: D, dtype: float64
+Strategy Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, dtype: float64
+Funding Cost:
+ 2023-01-01    0.0
+2023-01-02    0.0
+2023-01-03    0.0
+2023-01-04    0.0
+2023-01-05    0.0
+Freq: D, dtype: float64
+Net Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, dtype: float64
+Equity:
+ 2023-01-01    1000.000000
+2023-01-02    1011.111111
+2023-01-03    1022.222222
+2023-01-04    1033.333333
+2023-01-05    1044.444444
+Freq: D, dtype: float64
+Final: 1099.9999999999993
+-------------------------
+PASSED
+backend/tests/test_vectorized_backtester.py::test_transaction_costs 
+--- Vectorized Debug ---
+Market Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, Name: close, dtype: float64
+Positions:
+ 2023-01-01    0.0
+2023-01-02    1.0
+2023-01-03    1.0
+2023-01-04    1.0
+2023-01-05    1.0
+Freq: D, dtype: float64
+Strategy Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, dtype: float64
+Funding Cost:
+ 2023-01-01    0.0
+2023-01-02    0.0
+2023-01-03    0.0
+2023-01-04    0.0
+2023-01-05    0.0
+Freq: D, dtype: float64
+Net Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.001111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, dtype: float64
+Equity:
+ 2023-01-01    1000.000000
+2023-01-02    1001.111111
+2023-01-03    1012.112332
+2023-01-04    1023.113553
+2023-01-05    1034.114774
+Freq: D, dtype: float64
+Final: 1089.1208791208792
+-------------------------
+PASSED
+backend/tests/test_vectorized_backtester.py::test_empty_signals_flat_equity 
+--- Vectorized Debug ---
+Market Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, Name: close, dtype: float64
+Positions:
+ 2023-01-01    0.0
+2023-01-02    0.0
+2023-01-03    0.0
+2023-01-04    0.0
+2023-01-05    0.0
+Freq: D, dtype: float64
+Strategy Returns:
+ 2023-01-01    0.0
+2023-01-02    0.0
+2023-01-03    0.0
+2023-01-04    0.0
+2023-01-05    0.0
+Freq: D, dtype: float64
+Funding Cost:
+ 2023-01-01    0.0
+2023-01-02    0.0
+2023-01-03    0.0
+2023-01-04    0.0
+2023-01-05    0.0
+Freq: D, dtype: float64
+Net Returns:
+ 2023-01-01    0.0
+2023-01-02    0.0
+2023-01-03    0.0
+2023-01-04    0.0
+2023-01-05    0.0
+Freq: D, dtype: float64
+Equity:
+ 2023-01-01    1000.0
+2023-01-02    1000.0
+2023-01-03    1000.0
+2023-01-04    1000.0
+2023-01-05    1000.0
+Freq: D, dtype: float64
+Final: 1000.0
+-------------------------
+PASSED
+backend/tests/test_vectorized_backtester.py::test_funding_costs 
+--- Vectorized Debug ---
+Market Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, Name: close, dtype: float64
+Positions:
+ 2023-01-01    0.0
+2023-01-02    1.0
+2023-01-03    1.0
+2023-01-04    1.0
+2023-01-05    1.0
+Freq: D, dtype: float64
+Strategy Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.011111
+2023-01-03    0.010989
+2023-01-04    0.010870
+2023-01-05    0.010753
+Freq: D, dtype: float64
+Funding Cost:
+ 2023-01-01    0.00
+2023-01-02    0.01
+2023-01-03    0.01
+2023-01-04    0.01
+2023-01-05    0.01
+Freq: D, dtype: float64
+Net Returns:
+ 2023-01-01    0.000000
+2023-01-02    0.000111
+2023-01-03    0.000989
+2023-01-04    0.000870
+2023-01-05    0.000753
+Freq: D, dtype: float64
+Equity:
+ 2023-01-01    10000.000000
+2023-01-02    10001.111111
+2023-01-03    10011.002320
+2023-01-04    10019.707539
+2023-01-05    10027.249255
+Freq: D, dtype: float64
+Final: 10048.269748876928
+-------------------------
+Funding Cost Total: 0.09
+Final Equity: 10048.269748876928
+PASSED
+
+============================== 4 passed in 0.87s ==============================

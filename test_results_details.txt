@@ -1,0 +1,141 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\DogukanG÷k\AppData\Local\pypoetry\Cache\virtualenvs\project-vortex-RDTqcRqu-py3.13\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\DogukanG÷k\workspace\personal\project-vortex
+configfile: pyproject.toml
+plugins: anyio-4.10.0
+collecting ... collected 11 items
+
+backend/tests/test_slippage_models.py::test_fixed_slippage_constant PASSED [  9%]
+backend/tests/test_slippage_models.py::test_volume_weighted_slippage PASSED [ 18%]
+backend/tests/test_slippage_models.py::test_volatility_slippage PASSED   [ 27%]
+backend/tests/test_metrics_calculator.py::test_total_return PASSED       [ 36%]
+backend/tests/test_metrics_calculator.py::test_max_drawdown PASSED       [ 45%]
+backend/tests/test_metrics_calculator.py::test_win_rate_profit_factor PASSED [ 54%]
+backend/tests/test_metrics_calculator.py::test_sharpe_ratio_zero_vol PASSED [ 63%]
+backend/tests/test_vectorized_backtester.py::test_buy_and_hold_perfect FAILED [ 72%]
+backend/tests/test_vectorized_backtester.py::test_transaction_costs FAILED [ 81%]
+backend/tests/test_vectorized_backtester.py::test_empty_signals_flat_equity PASSED [ 90%]
+backend/tests/test_vectorized_backtester.py::test_funding_costs FAILED   [100%]
+
+================================== FAILURES ===================================
+__________________________ test_buy_and_hold_perfect __________________________
+
+market_data =                  close  volume
+2023-01-01  100.000000    1000
+2023-01-02  101.111111    1000
+2023-01-03  102.222222   ...-01-07  106.666667    1000
+2023-01-08  107.777778    1000
+2023-01-09  108.888889    1000
+2023-01-10  110.000000    1000
+
+    @pytest.mark.unit
+    def test_buy_and_hold_perfect(market_data):
+        """Test standard buy and hold without costs matching market return."""
+        # Signal: Always Long (1)
+        signals = pd.Series(1, index=market_data.index)
+    
+        backtester = VectorizedBacktester(
+            initial_capital=1000,
+            transaction_cost=0.0,
+            slippage_model=None, # fixed 0
+            funding_rate=0.0,
+            borrow_rate=0.0
+        )
+    
+        result = backtester.run(market_data, signals)
+    
+        # 100 -> 110 is +10%
+        # Initial 1000 -> 1100
+        # Note: VectorizedBacktester shifts signals by 1.
+        # Signal T0 -> Pos T1.
+        # So we miss the first bar's return (100->101.11).
+        # Return series: 0 (fill), T1-T2, ...
+    
+        # Let's verify end equity.
+        # Missed first 1.1% jump.
+        # So we capture 101.11 -> 110.
+        # 110 / 100 is 1.10 total.
+        # 101.11 is close[1].
+        # Total return captured should be ~ 110/101.11 = 1.088
+    
+        final_equity = result.equity_curve.iloc[-1]
+        expected_return = market_data.iloc[-1]["close"] / market_data.iloc[1]["close"]
+        expected_equity = 1000 * expected_return
+    
+>       assert final_equity == pytest.approx(expected_equity, rel=1e-3)
+E       assert np.float64(1099.9999999999993) == 1087.9120879120878 ▒ 1.08791
+E         
+E         comparison failed
+E         Obtained: 1099.9999999999993
+E         Expected: 1087.9120879120878 ▒ 1.08791
+
+backend\tests\test_vectorized_backtester.py:49: AssertionError
+___________________________ test_transaction_costs ____________________________
+
+market_data =                  close  volume
+2023-01-01  100.000000    1000
+2023-01-02  101.111111    1000
+2023-01-03  102.222222   ...-01-07  106.666667    1000
+2023-01-08  107.777778    1000
+2023-01-09  108.888889    1000
+2023-01-10  110.000000    1000
+
+    @pytest.mark.unit
+    def test_transaction_costs(market_data):
+        """Test that costs reduce equity."""
+        signals = pd.Series(1, index=market_data.index)
+    
+        # Costly backtester
+        backtester = VectorizedBacktester(
+            initial_capital=1000,
+            transaction_cost=0.01, # 1% per trade
+        )
+    
+        result = backtester.run(market_data, signals)
+    
+        # 1 Trade at start (0 -> 1). Cost 1% of 1000?
+        # Vectorized: trades[0] is not calculated because signals shifted.
+        # Signal T0 -> Pos T1.
+        # Pos T0 is 0. Pos T1 is 1. Diff is 1.
+        # Trade occurs at T1.
+        # Cost = 1 * 0.01 = 0.01 (1%).
+        # This 1% drag happens once.
+    
+        # We expected ~8.8% return in base case.
+        # Now roughly ~7.8% return.
+    
+>       assert result.metrics["total_return"] < 0.088
+E       assert np.float64(0.08912087912087907) < 0.088
+
+backend\tests\test_vectorized_backtester.py:76: AssertionError
+_____________________________ test_funding_costs ______________________________
+
+market_data =                  close  volume
+2023-01-01  100.000000    1000
+2023-01-02  101.111111    1000
+2023-01-03  102.222222   ...-01-07  106.666667    1000
+2023-01-08  107.777778    1000
+2023-01-09  108.888889    1000
+2023-01-10  110.000000    1000
+
+    @pytest.mark.unit
+    def test_funding_costs(market_data):
+        signals = pd.Series(1, index=market_data.index)
+    
+        # 1% funding per bar!
+        backtester = VectorizedBacktester(funding_rate=0.01)
+        result = backtester.run(market_data, signals)
+    
+        # Should drag returns significantly
+        assert result.costs["funding"].sum() > 0
+>       assert result.equity_curve.iloc[-1] < 1000 # Likely negative return despite bull market
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert np.float64(10048.269748876928) < 1000
+
+backend\tests\test_vectorized_backtester.py:98: AssertionError
+=========================== short test summary info ===========================
+FAILED backend/tests/test_vectorized_backtester.py::test_buy_and_hold_perfect
+FAILED backend/tests/test_vectorized_backtester.py::test_transaction_costs - ...
+FAILED backend/tests/test_vectorized_backtester.py::test_funding_costs - asse...
+========================= 3 failed, 8 passed in 1.07s =========================

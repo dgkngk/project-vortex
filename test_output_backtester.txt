@@ -1,0 +1,63 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\DogukanG÷k\AppData\Local\pypoetry\Cache\virtualenvs\project-vortex-RDTqcRqu-py3.13\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\DogukanG÷k\workspace\personal\project-vortex
+configfile: pyproject.toml
+plugins: anyio-4.10.0
+collecting ... collected 0 items / 3 errors
+
+=================================== ERRORS ====================================
+___________ ERROR collecting backend/tests/test_slippage_models.py ____________
+ImportError while importing test module 'C:\Users\DogukanG÷k\workspace\personal\project-vortex\backend\tests\test_slippage_models.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\tests\test_slippage_models.py:4: in <module>
+    from backend.scitus.backtest.slippage.FixedSlippage import FixedSlippage
+backend\scitus\backtest\__init__.py:1: in <module>
+    from backend.scitus.backtest.BaseBacktester import BaseBacktester
+backend\scitus\backtest\BaseBacktester.py:6: in <module>
+    from backend.scitus.backtest.BacktestResult import BacktestResult
+backend\scitus\backtest\BacktestResult.py:5: in <module>
+    import plotly.graph_objects as go
+E   ModuleNotFoundError: No module named 'plotly'
+__________ ERROR collecting backend/tests/test_metrics_calculator.py __________
+ImportError while importing test module 'C:\Users\DogukanG÷k\workspace\personal\project-vortex\backend\tests\test_metrics_calculator.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\tests\test_metrics_calculator.py:4: in <module>
+    from backend.scitus.backtest.MetricsCalculator import MetricsCalculator
+backend\scitus\backtest\__init__.py:1: in <module>
+    from backend.scitus.backtest.BaseBacktester import BaseBacktester
+backend\scitus\backtest\BaseBacktester.py:6: in <module>
+    from backend.scitus.backtest.BacktestResult import BacktestResult
+backend\scitus\backtest\BacktestResult.py:5: in <module>
+    import plotly.graph_objects as go
+E   ModuleNotFoundError: No module named 'plotly'
+________ ERROR collecting backend/tests/test_vectorized_backtester.py _________
+ImportError while importing test module 'C:\Users\DogukanG÷k\workspace\personal\project-vortex\backend\tests\test_vectorized_backtester.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\tests\test_vectorized_backtester.py:4: in <module>
+    from backend.scitus.backtest.VectorizedBacktester import VectorizedBacktester
+backend\scitus\backtest\__init__.py:1: in <module>
+    from backend.scitus.backtest.BaseBacktester import BaseBacktester
+backend\scitus\backtest\BaseBacktester.py:6: in <module>
+    from backend.scitus.backtest.BacktestResult import BacktestResult
+backend\scitus\backtest\BacktestResult.py:5: in <module>
+    import plotly.graph_objects as go
+E   ModuleNotFoundError: No module named 'plotly'
+=========================== short test summary info ===========================
+ERROR backend/tests/test_slippage_models.py
+ERROR backend/tests/test_metrics_calculator.py
+ERROR backend/tests/test_vectorized_backtester.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!
+============================== 3 errors in 3.69s ==============================
