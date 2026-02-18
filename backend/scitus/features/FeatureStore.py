@@ -52,7 +52,7 @@ class FeatureStore:
             asset_class: Top-level partition (default: 'crypto').
 
         Returns:
-            DataFrame indexed from ``start`` to ``end`` with a column per feature.
+            DataFrame with a column per feature for rows between ``start`` and ``end``.
         """
         feature_defs = [self.registry.get(name) for name in feature_names]
 
@@ -96,7 +96,18 @@ class FeatureStore:
 
         # Trim to requested date range (point-in-time: discard lookback rows)
         if "timestamp" in raw_data.columns:
+            # Ensure timestamp type for comparison
+            raw_data["timestamp"] = pd.to_datetime(raw_data["timestamp"])
             mask = (raw_data["timestamp"] >= start) & (raw_data["timestamp"] <= end)
             result = result.loc[mask]
+        elif isinstance(raw_data.index, pd.DatetimeIndex):
+            mask = (raw_data.index >= start) & (raw_data.index <= end)
+            result = result.loc[mask]
+        else:
+            self.logger.warning(
+                "Could not trim feature data: no 'timestamp' col or DatetimeIndex. "
+                "Returning empty to prevent leakage."
+            )
+            return pd.DataFrame(columns=feature_names)
 
         return result

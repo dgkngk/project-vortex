@@ -63,10 +63,24 @@ class ParquetWriter(DataDestinationClient):
 
         df_to_write = df.copy()
 
+        # Ensure 'timestamp' is datetime-like before using .dt accessors
+        if 'timestamp' in df_to_write.columns:
+             df_to_write['timestamp'] = pd.to_datetime(df_to_write['timestamp'], errors='coerce')
+
         if 'timestamp' not in df_to_write.columns and isinstance(df_to_write.index, pd.DatetimeIndex):
             df_to_write['timestamp'] = df_to_write.index
         elif 'timestamp' not in df_to_write.columns:
             self.logger.error(f"DataFrame for {asset_id} missing 'timestamp' column or index.")
+            return
+
+        # Check for invalid timestamps after coercion
+        if df_to_write['timestamp'].isna().any():
+            invalid_count = df_to_write['timestamp'].isna().sum()
+            self.logger.warning(f"Dropping {invalid_count} rows with invalid/NaT timestamps for {asset_id}.")
+            df_to_write = df_to_write.dropna(subset=['timestamp'])
+
+        if df_to_write.empty:
+            self.logger.warning(f"No valid data remaining for {asset_id} after timestamp validation.")
             return
 
         df_to_write['year'] = df_to_write['timestamp'].dt.year
@@ -79,6 +93,7 @@ class ParquetWriter(DataDestinationClient):
                 path=output_path,
                 partition_cols=['year', 'month'],
                 index=False,
+                existing_data_behavior='overwrite_or_ignore'
             )
             self.logger.info(f"Persisted {len(df_to_write)} rows for {asset_id} to {output_path}")
         except Exception as e:

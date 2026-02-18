@@ -61,16 +61,20 @@ class HistoricalDataStore:
 
         sql = f"""
             SELECT *
-            FROM read_parquet('{file_pattern}', hive_partitioning=1)
+            FROM read_parquet(?, hive_partitioning=1)
         """
 
+        params = [file_pattern]
         conditions = []
         if start_date:
-            conditions.append(f"timestamp >= '{start_date}'")
+            conditions.append("timestamp >= ?")
+            params.append(start_date)
         if end_date:
-            conditions.append(f"timestamp <= '{end_date}'")
+            conditions.append("timestamp <= ?")
+            params.append(end_date)
         if timeframe:
-            conditions.append(f"timeframe = '{timeframe}'")
+            conditions.append("timeframe = ?")
+            params.append(timeframe)
 
         if conditions:
             sql += " WHERE " + " AND ".join(conditions)
@@ -78,7 +82,7 @@ class HistoricalDataStore:
         sql += " ORDER BY timestamp ASC"
 
         try:
-            return self.conn.execute(sql).df()
+            return self.conn.execute(sql, params).df()
         except duckdb.IOException as e:
             self.logger.warning(
                 f"No Parquet files found for {asset_class}/{asset_id}: {e}"

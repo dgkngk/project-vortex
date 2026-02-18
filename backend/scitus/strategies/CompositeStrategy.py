@@ -1,9 +1,9 @@
 import pandas as pd
-import numpy as np
 from typing import Dict, Any, Optional
 from backend.scitus.BaseStrategy import BaseStrategy
 from backend.core.enums.SignalTypes import SignalTypes
 from backend.core.enums.StrategyConfigs import StrategyConfigs
+from backend.core.VortexLogger import VortexLogger
 
 class CompositeStrategy(BaseStrategy):
     """
@@ -27,6 +27,7 @@ class CompositeStrategy(BaseStrategy):
         }
         """
         super().__init__(config)
+        self.logger = VortexLogger(name="CompositeStrategy")
         self.primary_strategy: Optional[BaseStrategy] = None
         self.filter_strategies: list[BaseStrategy] = []
         self._initialize_strategies()
@@ -44,7 +45,7 @@ class CompositeStrategy(BaseStrategy):
                     StrategyConfigs[p_type], p_cfg
                 )
             except Exception as e:
-                print(f"Error initializing primary strategy: {e}")
+                self.logger.error(f"Error initializing primary strategy: {e}")
 
         # Init Filters
         filter_confs = self.config.get("filter_strategies", [])
@@ -57,17 +58,21 @@ class CompositeStrategy(BaseStrategy):
                 )
                 self.filter_strategies.append(filt)
             except Exception as e:
-                print(f"Error initializing filter strategy: {e}")
+                self.logger.error(f"Error initializing filter strategy: {e}")
 
     def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
         df = data.copy()
         
         if not self.primary_strategy:
+            # No primary strategy available; default to HOLD for all rows
+            df["signal"] = SignalTypes.HOLD.value
             return df
             
         # 1. Get Primary Signal
         primary_res = self.primary_strategy.generate_signal(df.copy())
         if "signal" not in primary_res.columns:
+            # Primary strategy did not produce a signal column; default to HOLD
+            df["signal"] = SignalTypes.HOLD.value
             return df
             
         primary_signals = primary_res["signal"]
@@ -90,13 +95,15 @@ class CompositeStrategy(BaseStrategy):
                 # Let's go with Strict Confirmation for "Composite" usually implies high confidence.
                 # BUY requires Primary=BUY AND Filter=BUY
                 
-                mask_buy = (final_signal == SignalTypes.BUY.value)
-                # If filter is not BUY, set to HOLD
-                final_signal[mask_buy & (filt_s != SignalTypes.BUY.value)] = SignalTypes.HOLD.value
+                # Treat any positive value as BUY-directional
+                mask_buy = final_signal > 0
+                # If filter is not BUY-directional, set to HOLD
+                final_signal[mask_buy & ~(filt_s > 0)] = SignalTypes.HOLD.value
                 
                 # SELL requires Primary=SELL AND Filter=SELL
-                mask_sell = (final_signal == SignalTypes.SELL.value)
-                final_signal[mask_sell & (filt_s != SignalTypes.SELL.value)] = SignalTypes.HOLD.value
+                # Treat any negative value as SELL-directional
+                mask_sell = final_signal < 0
+                final_signal[mask_sell & ~(filt_s < 0)] = SignalTypes.HOLD.value
 
         df["signal"] = final_signal
         return df

@@ -24,13 +24,15 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 WORKDIR /app
 
 # Copy dependency files first (for caching)
+# Copy dependency files first (for caching)
 COPY pyproject.toml poetry.lock ./
 
-# Install dependencies
-RUN poetry install --no-interaction --no-ansi --no-root
+# Install dependencies (exclude dev dependencies for production image)
+RUN poetry install --no-interaction --no-ansi --no-root --no-dev
 
-# Copy application code
-COPY . .
+# Copy application code (be specific to avoid copying junk)
+COPY backend ./backend
 
 # Default command (can be overridden in docker-compose)
-CMD ["uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Using shell form to allow variable expansion if needed
+CMD ["sh", "-c", "uvicorn backend.api.main:app --host 0.0.0.0 --port 8000"]

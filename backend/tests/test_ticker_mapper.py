@@ -31,4 +31,4 @@ class TestTickerMapper:
     def test_resolve_chained_rename(self, ticker_mapper):
         """Future-proofing: Test handling if A -> B -> C (not implemented yet, but good to think about).
         For now, just ensure direct mapping works."""
-        pass
+        pytest.xfail("Chained renames (A -> B -> C) are not implemented yet in TickerMapper.")

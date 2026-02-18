@@ -1,9 +1,9 @@
 import pandas as pd
-import numpy as np
 from typing import List, Dict, Any
 from backend.scitus.BaseStrategy import BaseStrategy
 from backend.core.enums.SignalTypes import SignalTypes
 from backend.core.enums.StrategyConfigs import StrategyConfigs
+from backend.core.VortexLogger import VortexLogger
 
 class VotingStrategy(BaseStrategy):
     """
@@ -24,6 +24,7 @@ class VotingStrategy(BaseStrategy):
         }
         """
         super().__init__(config)
+        self.logger = VortexLogger(name="VotingStrategy")
         self.strategies: List[BaseStrategy] = []
         self.min_votes = self.config.get("min_votes", 1)
         self._initialize_strategies()
@@ -44,15 +45,18 @@ class VotingStrategy(BaseStrategy):
                 strategy = StrategyFactory.create_strategy(strat_enum, strat_conf)
                 self.strategies.append(strategy)
             except KeyError:
-                print(f"Warning: Unknown strategy type '{strat_type_str}' in VotingStrategy config.")
+                self.logger.warning(f"Unknown strategy type '{strat_type_str}' in VotingStrategy config.")
             except Exception as e:
-                print(f"Error initializing sub-strategy {strat_type_str}: {e}")
+                self.logger.error(f"Error initializing sub-strategy {strat_type_str}: {e}")
 
     def generate_signal(self, data: pd.DataFrame) -> pd.DataFrame:
-        if not self.strategies:
-            return data
-            
         df = data.copy()
+        
+        if not self.strategies:
+            # If no sub-strategies are configured, default to HOLD for all rows
+            df["signal"] = SignalTypes.HOLD.value
+            return df
+            
         # Initialize vote counters
         buy_votes = pd.Series(0, index=df.index)
         sell_votes = pd.Series(0, index=df.index)
@@ -65,13 +69,15 @@ class VotingStrategy(BaseStrategy):
                 if "signal" in sig_df.columns:
                     # Tally votes
                     s = sig_df["signal"]
-                    buy_votes += (s == SignalTypes.BUY.value).astype(int)
+                    # Treat any positive value as BUY-directional
+                    buy_votes += (s > 0).astype(int)
                     # Some strategies might use UNDERPRICED as BUY equivalent, check logic?
                     # For now, strict mapping to SignalTypes
                     
-                    sell_votes += (s == SignalTypes.SELL.value).astype(int)
+                    # Treat any negative value as SELL-directional
+                    sell_votes += (s < 0).astype(int)
             except Exception as e:
-                print(f"Error in sub-strategy execution: {e}")
+                self.logger.error(f"Error in sub-strategy execution: {e}")
                 
         # Determine final signal
         final_signal = pd.Series(SignalTypes.HOLD.value, index=df.index)
