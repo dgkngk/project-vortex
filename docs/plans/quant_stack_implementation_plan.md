@@ -171,6 +171,9 @@ Refining rule-based logic to serve as Feature Generators for ML levels.
 
 - **Composite Strategies:** Combine Trend + Volatility indicators.
 - **Voting Strategies:** Ensemble consensus from multiple technical indicators.
+- **Event-Driven Variants:** Each heuristic strategy should also implement `EventStrategy.on_bar()` so it can be used with the `EventBacktester` for realistic bar-by-bar simulation. This enables stop-loss/take-profit logic, partial fills, and proper order management.
+  - `CompositeEventStrategy` — Event-driven version of `CompositeStrategy`.
+  - `VotingEventStrategy` — Event-driven version of `VotingStrategy`.
 - **Role:** These generate **features** for Level 2+ (e.g., "RSI says Overbought" → binary feature).
 - **Monitoring:** Each strategy has performance decay detection — alert if live Sharpe drops below historical Sharpe by > 1 SD.
 

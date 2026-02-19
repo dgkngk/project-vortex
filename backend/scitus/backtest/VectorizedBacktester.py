@@ -11,7 +11,7 @@ class VectorizedBacktester(BaseBacktester):
     Performs full cost modeling using matrix operations.
     """
 
-    def run(self, data: pd.DataFrame, signals: pd.Series, **kwargs) -> BacktestResult:
+    def run(self, data: pd.DataFrame, *, signals: pd.Series, **kwargs) -> BacktestResult:
         """
         Run a fully vectorized backtest on the provided market data and trading signals.
 

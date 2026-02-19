@@ -26,7 +26,7 @@ def test_buy_and_hold_perfect(market_data):
         borrow_rate=0.0
     )
     
-    result = backtester.run(market_data, signals)
+    result = backtester.run(market_data, signals=signals)
     
     # The market moves from 100 to 110 (10% total return).
     # The strategy signals LONG (1) at T0.
@@ -55,7 +55,7 @@ def test_transaction_costs(market_data):
         transaction_cost=0.01, # 1% per trade
     )
     
-    result = backtester.run(market_data, signals)
+    result = backtester.run(market_data, signals=signals)
     
     # Strategy moves from Neutral (0) to Long (1) at T1 (due to shifted signal from T0).
     # This triggers a single transaction of size 1.0.
@@ -73,7 +73,7 @@ def test_transaction_costs(market_data):
 def test_empty_signals_flat_equity(market_data):
     signals = pd.Series(0, index=market_data.index)
     backtester = VectorizedBacktester(initial_capital=1000)
-    result = backtester.run(market_data, signals)
+    result = backtester.run(market_data, signals=signals)
     
     assert result.equity_curve.iloc[-1] == 1000.0
     assert result.metrics["total_return"] == 0.0
@@ -99,7 +99,7 @@ def test_funding_costs(market_data):
     # Let's set funding > 10% annualized.
     backtester.funding_rate = 0.50 # 50% annualized cost.
     
-    result = backtester.run(market_data, signals)
+    result = backtester.run(market_data, signals=signals)
     
     # Total Funding Cost approx: 1000 * 0.5 * (10/10) = 500?
     # Actually compounded daily. 
@@ -114,7 +114,7 @@ def test_short_selling_loses_in_uptrend(market_data):
     """A pure short on a steadily rising market should lose money."""
     signals = pd.Series(-1, index=market_data.index)
     backtester = VectorizedBacktester(initial_capital=1000)
-    result = backtester.run(market_data, signals)
+    result = backtester.run(market_data, signals=signals)
 
     # Rising market (100->110) with constant short should generate negative returns.
     assert result.metrics["total_return"] < 0
@@ -135,8 +135,8 @@ def test_position_flipping_costs(market_data):
         transaction_cost=0.01
     )
     
-    res_hold = backtester.run(market_data, signals_hold)
-    res_flip = backtester.run(market_data, signals_flip)
+    res_hold = backtester.run(market_data, signals=signals_hold)
+    res_flip = backtester.run(market_data, signals=signals_flip)
     
     # Flipping incurs cost on every trade (size 2.0 usually) vs 1 trade for hold.
     assert res_flip.costs["transaction"].sum() > res_hold.costs["transaction"].sum()
@@ -155,7 +155,7 @@ def test_borrow_cost_only_on_shorts(market_data):
         bars_per_year=10 # So total backtest is 1 year
     )
     
-    result = backtester.run(market_data, signals)
+    result = backtester.run(market_data, signals=signals)
     
     borrow_costs = result.costs["borrow"]
     
