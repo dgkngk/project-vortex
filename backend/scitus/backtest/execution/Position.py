@@ -15,6 +15,7 @@ class Position:
     quantity: float
     entry_price: float
     entry_time: pd.Timestamp
+    entry_bar_index: int = 0
     unrealized_pnl: float = 0.0
     market_value: float = 0.0
 

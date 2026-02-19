@@ -15,11 +15,11 @@ class BuyAndHoldStrategy(EventStrategy):
         super().__init__(config={})
         self._entered = False
 
-    def on_bar(self, history: pd.DataFrame, portfolio: Portfolio) -> Optional[Order]:
+    def on_bar(self, bar: pd.Series, portfolio: Portfolio) -> Optional[Order]:
         if not self._entered:
             self._entered = True
             capital = portfolio.cash
-            price = history.iloc[-1]["close"]
+            price = bar["close"]
             qty = capital / price
             return Order(side=OrderSide.BUY, order_type=OrderType.MARKET, quantity=qty)
         return None
@@ -30,7 +30,7 @@ class NeverTradeStrategy(EventStrategy):
     def __init__(self):
         super().__init__(config={})
 
-    def on_bar(self, history: pd.DataFrame, portfolio: Portfolio) -> Optional[Order]:
+    def on_bar(self, bar: pd.Series, portfolio: Portfolio) -> Optional[Order]:
         return None
 
 
@@ -40,11 +40,11 @@ class ShortOnlyStrategy(EventStrategy):
         super().__init__(config={})
         self._entered = False
 
-    def on_bar(self, history: pd.DataFrame, portfolio: Portfolio) -> Optional[Order]:
+    def on_bar(self, bar: pd.Series, portfolio: Portfolio) -> Optional[Order]:
         if not self._entered:
             self._entered = True
             capital = portfolio.cash
-            price = history.iloc[-1]["close"]
+            price = bar["close"]
             qty = capital / price
             return Order(side=OrderSide.SELL, order_type=OrderType.MARKET, quantity=qty)
         return None
@@ -58,16 +58,17 @@ class StopLossStrategy(EventStrategy):
         self._stop_submitted = False
         self._stop_price = stop_price
 
-    def on_bar(self, history: pd.DataFrame, portfolio: Portfolio) -> Optional[Order]:
+    def on_bar(self, bar: pd.Series, portfolio: Portfolio) -> Optional[Order]:
         if not self._entered:
             self._entered = True
-            price = history.iloc[-1]["close"]
+            price = bar["close"]
             qty = portfolio.cash / price
             return Order(side=OrderSide.BUY, order_type=OrderType.MARKET, quantity=qty)
         if not self._stop_submitted and portfolio.positions:
             self._stop_submitted = True
             pos = list(portfolio.positions.values())[0]
             return Order(
+                symbol=pos.symbol,
                 side=OrderSide.SELL, order_type=OrderType.STOP,
                 quantity=pos.quantity, stop_price=self._stop_price,
             )
@@ -82,7 +83,7 @@ class LimitBuyStrategy(EventStrategy):
         self._limit_price = limit_price
         self._quantity = quantity
 
-    def on_bar(self, history: pd.DataFrame, portfolio: Portfolio) -> Optional[Order]:
+    def on_bar(self, bar: pd.Series, portfolio: Portfolio) -> Optional[Order]:
         if not self._submitted:
             self._submitted = True
             return Order(
@@ -129,21 +130,23 @@ def test_buy_and_hold_gains_in_uptrend(rising_market):
 
 @pytest.mark.unit
 def test_no_lookahead_bias(rising_market):
-    """Strategy only receives past data -- history grows each bar."""
-    history_lengths = []
+    """Strategy receives bars sequentially."""
+    timestamps = []
 
     class RecorderStrategy(EventStrategy):
         def __init__(self):
             super().__init__(config={})
 
-        def on_bar(self, history: pd.DataFrame, portfolio: Portfolio) -> Optional[Order]:
-            history_lengths.append(len(history))
+        def on_bar(self, bar: pd.Series, portfolio: Portfolio) -> Optional[Order]:
+            timestamps.append(bar.name)
             return None
 
     backtester = EventBacktester(initial_capital=10_000)
     backtester.run(rising_market, strategy=RecorderStrategy())
 
-    assert history_lengths == list(range(1, 11))
+    # Ensure we saw all dates in order
+    assert len(timestamps) == 10
+    assert timestamps == list(rising_market.index)
 
 
 @pytest.mark.unit

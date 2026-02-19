@@ -48,6 +48,7 @@ class ExecutionHandler:
 
         return Fill(
             order_id=order.id,
+            symbol=order.symbol,
             side=order.side,
             quantity=order.quantity,
             fill_price=fill_price,
@@ -117,14 +118,22 @@ class ExecutionHandler:
             order.quantity, volume, fill_price_base
         )
 
-        order_value = fill_price_base * order.quantity
+        slippage_per_unit = slippage_cost / order.quantity if order.quantity > 0 else 0.0
+
+        if order.side == OrderSide.BUY:
+            fill_price = fill_price_base + slippage_per_unit
+        else:  # SELL
+            fill_price = fill_price_base - slippage_per_unit
+
+        order_value = fill_price * order.quantity
         commission = order_value * self.transaction_cost
 
         return Fill(
             order_id=order.id,
+            symbol=order.symbol,
             side=order.side,
             quantity=order.quantity,
-            fill_price=fill_price_base,
+            fill_price=fill_price,
             timestamp=bar.name,
             commission=commission,
             slippage_cost=slippage_cost,

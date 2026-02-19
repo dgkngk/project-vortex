@@ -11,6 +11,7 @@ class Fill:
     Represents a completed order execution.
     """
     order_id: str
+    symbol: str
     side: OrderSide
     quantity: float
     fill_price: float

@@ -41,6 +41,7 @@ class EventBacktester(BaseBacktester):
         funding_rate_per_bar = self._resolve_rate(self.funding_rate, data.index)
         borrow_rate_per_bar = self._resolve_rate(self.borrow_rate, data.index)
 
+        position_history = []
         for i, bar in enumerate(DataQueue(data)):
             timestamp = bar.name
 
@@ -58,9 +59,8 @@ class EventBacktester(BaseBacktester):
             for fill in triggered_fills:
                 portfolio.apply_fill(fill)
 
-            # 4. Strategy generates signal from visible history only
-            history = data.iloc[:i + 1]
-            order = strategy.on_bar(history, portfolio)
+            # 4. Strategy generates signal from current bar
+            order = strategy.on_bar(bar, portfolio)
 
             # 5. Execute or queue order
             if order is not None:
@@ -72,9 +72,15 @@ class EventBacktester(BaseBacktester):
                     execution.submit_pending(order)
 
             # 6. Record equity snapshot
+            # 6. Record equity and position snapshot
             portfolio.record_snapshot(timestamp)
+            net_position = sum(
+                pos.quantity if pos.side.value == "BUY" else -pos.quantity
+                for pos in portfolio.positions.values()
+            )
+            position_history.append((timestamp, net_position))
 
-        return self._build_result(portfolio)
+        return self._build_result(portfolio, position_history)
 
     def _resolve_rate(self, rate: Union[float, pd.Series],
                       index: pd.DatetimeIndex) -> pd.Series:
@@ -83,15 +89,14 @@ class EventBacktester(BaseBacktester):
             return rate / self.bars_per_year
         return pd.Series(rate / self.bars_per_year, index=index)
 
-    def _build_result(self, portfolio: Portfolio) -> BacktestResult:
+    def _build_result(self, portfolio: Portfolio, position_history: list) -> BacktestResult:
         """Assemble BacktestResult from portfolio state."""
         equity = portfolio.equity_series
         returns = equity.pct_change().fillna(0)
 
         if portfolio.trade_log:
-            trades_records = []
-            for trade in portfolio.trade_log:
-                trades_records.append({
+            trades_df = pd.DataFrame([
+                {
                     "symbol": trade.symbol,
                     "side": trade.side.value,
                     "entry_price": trade.entry_price,
@@ -103,13 +108,18 @@ class EventBacktester(BaseBacktester):
                     "commission": trade.commission,
                     "slippage": trade.slippage,
                     "holding_bars": trade.holding_bars,
-                })
-            trades_df = pd.DataFrame(trades_records)
+                }
+                for trade in portfolio.trade_log
+            ])
         else:
             trades_df = pd.DataFrame()
 
-        # Build a positions series (simplified: 0 everywhere for now)
-        positions = pd.Series(0.0, index=equity.index)
+        # Build positions series
+        if position_history:
+            ids, values = zip(*position_history)
+            positions = pd.Series(values, index=pd.DatetimeIndex(ids))
+        else:
+            positions = pd.Series(0.0, index=equity.index)
 
         metrics = MetricsCalculator.calculate(
             returns=returns,

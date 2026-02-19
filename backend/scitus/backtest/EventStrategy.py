@@ -18,15 +18,15 @@ class EventStrategy(BaseStrategy):
     """
 
     @abstractmethod
-    def on_bar(self, history: pd.DataFrame, portfolio: Portfolio) -> Optional[Order]:
+    def on_bar(self, bar: pd.Series, portfolio: Portfolio) -> Optional[Order]:
         """
         Called once per bar during the event loop.
-
-        Args:
-            history: DataFrame of all bars seen so far (up to and including
-                     current bar). The strategy must NOT access future data.
+        
+        Parameters:
+            bar: The current bar data (Series with open, high, low, close, volume).
+                 The strategy should maintain its own history state if needed.
             portfolio: Current portfolio state (cash, positions, equity).
-
+        
         Returns:
             An Order to submit, or None to do nothing this bar.
         """

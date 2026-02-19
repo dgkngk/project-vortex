@@ -9,6 +9,7 @@ pythonpath = ["."]
 markers = [
     "contract: marks tests that hit real external APIs",
     "unit: marks fast unit tests with mocks",
+    "slow: marks tests as slow",
 ]
 
 # Optional: fail on unknown markers

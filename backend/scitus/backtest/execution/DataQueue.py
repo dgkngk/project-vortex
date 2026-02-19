@@ -18,8 +18,8 @@ class DataQueue:
             raise ValueError(f"Missing required columns: {missing}")
 
     def __iter__(self):
-        for _, row in self._data.iterrows():
-            yield row
+        for index in self._data.index:
+            yield self._data.loc[index]
 
     def __len__(self):
         return len(self._data)

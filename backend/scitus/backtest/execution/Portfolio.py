@@ -35,8 +35,8 @@ class Portfolio:
         - Position exists, same side -> increase (average entry price).
         - Position exists, opposite side -> reduce/close/flip.
         """
-        symbol = "DEFAULT"
-        self.cash -= fill.commission + fill.slippage_cost
+        symbol = fill.symbol
+        self.cash -= fill.commission
 
         if symbol not in self.positions:
             self._open_position(symbol, fill)
@@ -64,6 +64,7 @@ class Portfolio:
             entry_price=fill.fill_price,
             entry_time=fill.timestamp,
         )
+        pos.entry_bar_index = self._bar_count
         # Initialize market value so equity is correct before next MtM cycle
         pos.update_market_value(fill.fill_price)
         self.positions[symbol] = pos
@@ -95,6 +96,12 @@ class Portfolio:
             pnl = (position.entry_price - fill.fill_price) * close_qty
             self.cash -= fill.fill_price * close_qty
 
+        # Pro-rate costs based on quantity closed vs total fill quantity
+        fill_ratio = close_qty / fill.quantity if fill.quantity > 0 else 1.0
+        
+        # Calculate holding period
+        holding_bars = self._bar_count - position.entry_bar_index
+
         self.trade_log.append(TradeRecord(
             symbol=symbol,
             side=position.side,
@@ -104,9 +111,9 @@ class Portfolio:
             entry_time=position.entry_time,
             exit_time=fill.timestamp,
             pnl=pnl,
-            commission=fill.commission,
-            slippage=fill.slippage_cost,
-            holding_bars=self._bar_count,
+            commission=fill.commission * fill_ratio,
+            slippage=fill.slippage_cost * fill_ratio,
+            holding_bars=holding_bars,
         ))
 
         if close_qty >= position.quantity:
@@ -134,13 +141,13 @@ class Portfolio:
         - Borrow: position_value * borrow_rate_per_bar (short positions only)
         """
         for position in self.positions.values():
-            # Funding on all positions
-            funding_cost = position.market_value * abs(funding_rate_per_bar)
+            # Funding on all positions (use absolute notional, signed rate)
+            funding_cost = position.market_value * funding_rate_per_bar
             self.cash -= funding_cost
 
-            # Borrow cost only on short positions
+            # Borrow cost only on short positions (use absolute notional, signed rate)
             if position.side == OrderSide.SELL:
-                borrow_cost = position.market_value * abs(borrow_rate_per_bar)
+                borrow_cost = abs(position.market_value) * borrow_rate_per_bar
                 self.cash -= borrow_cost
 
     @property

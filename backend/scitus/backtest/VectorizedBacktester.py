@@ -60,21 +60,7 @@ class VectorizedBacktester(BaseBacktester):
         """
         # Validate required columns in input data
         required_columns = {"close", "volume"}
-        missing_columns = required_columns.difference(set(data.columns))
-        if missing_columns:
-            # We only strictly need 'volume' if using volume-based slippage,
-            # but good practice to check if we expect it.
-            # However, if using FixedSlippage, volume might not be needed.
-            # Let's check if we strictly need it?
-            # The PR comment suggested adding validation for 'volume' specifically.
-            # But let's be safe: only if provided slippage model needs it?
-            # For now, let's effectively warn or just check 'close' strictly, 
-            # and 'volume' if we want to be strict.
-            # Given the test failures in review about missing volume, let's enforce it
-            # OR better, only enforce 'close', and let Slippage model fail if volume missing?
-            # The comment suggested: "Add validation ... to ensure required columns ('close', 'volume') are present".
-            # So I will enforce 'volume' too as requested.
-            pass  # Logic implemented below
+
 
         if "close" not in data.columns:
              raise ValueError("Input data missing required column: 'close'")
