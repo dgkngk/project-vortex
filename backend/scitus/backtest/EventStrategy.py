@@ -23,8 +23,8 @@ class EventStrategy(BaseStrategy):
         Called once per bar during the event loop.
         
         Parameters:
-            bar: The current bar data (Series with open, high, low, close, volume).
-                 The strategy should maintain its own history state if needed.
+            bar: The current bar data (Series with at least 'close' and 'volume';
+                 'open', 'high', and 'low' may also be present if available).
             portfolio: Current portfolio state (cash, positions, equity).
         
         Returns:

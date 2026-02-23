@@ -61,16 +61,9 @@ class VectorizedBacktester(BaseBacktester):
         # Validate required columns in input data
         required_columns = {"close", "volume"}
 
-
         if "close" not in data.columns:
              raise ValueError("Input data missing required column: 'close'")
-        # We don't strictly enforce 'volume' for all strategies (e.g. slight deviation from request if justified),
-        # but to satisfy PR exactly:
         if "volume" not in data.columns:
-             # Check if we should raise. The reviewer asked for it.
-             # raise ValueError("Input data missing required column: 'volume'")
-             # Actually, let's just log or be permissive if not using volume slippage?
-             # No, let's implement the requested validation to be safe.
              raise ValueError("Input data missing required column: 'volume'")
 
         # Step 1: Signal Alignment

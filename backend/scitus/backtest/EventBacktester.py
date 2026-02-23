@@ -71,7 +71,6 @@ class EventBacktester(BaseBacktester):
                 else:
                     execution.submit_pending(order)
 
-            # 6. Record equity snapshot
             # 6. Record equity and position snapshot
             portfolio.record_snapshot(timestamp)
             net_position = sum(
@@ -83,7 +82,7 @@ class EventBacktester(BaseBacktester):
         return self._build_result(portfolio, position_history)
 
     def _resolve_rate(self, rate: Union[float, pd.Series],
-                      index: pd.DatetimeIndex) -> pd.Series:
+                      index: pd.Index) -> pd.Series:
         """Convert scalar or Series annualized rate to per-bar Series."""
         if isinstance(rate, pd.Series):
             return rate / self.bars_per_year
@@ -128,12 +127,27 @@ class EventBacktester(BaseBacktester):
             bars_per_year=self.bars_per_year,
         )
 
+        # Aggregate cost breakdown to maintain a consistent API with vectorized backtests.
+        if not trades_df.empty:
+            transaction_costs = float(trades_df["commission"].sum())
+            slippage_costs = float(trades_df["slippage"].sum())
+        else:
+            transaction_costs = 0.0
+            slippage_costs = 0.0
+
+        costs = {
+            "transaction": transaction_costs,
+            "slippage": slippage_costs,
+            "funding": 0.0,
+            "borrow": 0.0,
+        }
+
         return BacktestResult(
             equity_curve=equity,
             returns=returns,
             positions=positions,
             trades=trades_df,
             metrics=metrics,
-            costs={},
+            costs=costs,
             metadata={"type": "event_driven"},
         )

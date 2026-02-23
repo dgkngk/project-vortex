@@ -36,7 +36,7 @@ class ExecutionHandler:
         slippage_cost = self.slippage_model.calculate_single(
             order.quantity, volume, close
         )
-        slippage_per_unit = slippage_cost / (order.quantity * close) * close if close > 0 else 0
+        slippage_per_unit = slippage_cost / order.quantity if order.quantity > 0 else 0.0
 
         if order.side == OrderSide.BUY:
             fill_price = close + slippage_per_unit

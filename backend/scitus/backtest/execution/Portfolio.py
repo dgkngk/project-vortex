@@ -82,6 +82,8 @@ class Portfolio:
             / total_qty
         )
         position.quantity = total_qty
+        # Keep market value in sync so equity is correct before next MtM cycle
+        position.update_market_value(fill.fill_price)
 
     def _reduce_or_flip_position(self, symbol: str, position: Position, fill: Fill):
         """Reduce, close, or flip a position (opposite side fill)."""
@@ -125,6 +127,7 @@ class Portfolio:
         if remainder > 0:
             flipped_fill = Fill(
                 order_id=fill.order_id,
+                symbol=symbol,
                 side=fill.side,
                 quantity=remainder,
                 fill_price=fill.fill_price,

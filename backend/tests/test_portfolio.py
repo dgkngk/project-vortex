@@ -14,6 +14,7 @@ def portfolio():
 def _make_fill(side, quantity, price, timestamp=None, commission=0.0, slippage=0.0):
     return Fill(
         order_id="test-order",
+        symbol="DEFAULT",
         side=side,
         quantity=quantity,
         fill_price=price,
