@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
-import pandas as pd
 import pandas as pd
 
 
@@ -15,7 +14,7 @@ class BacktestResult:
     positions: pd.Series
     trades: pd.DataFrame
     metrics: Dict[str, float]
-    costs: Dict[str, pd.Series]
+    costs: Dict[str, Union[pd.Series, float]]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dataframe(self) -> pd.DataFrame:

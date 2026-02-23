@@ -9,6 +9,7 @@ pythonpath = ["."]
 markers = [
     "contract: marks tests that hit real external APIs",
     "unit: marks fast unit tests with mocks",
+    "slow: marks tests as slow",
 ]
 
 # Optional: fail on unknown markers
@@ -19,6 +20,7 @@ addopts = "-ra --strict-markers"
 matplotlib = "^3.10.7"
 jupyterlab = "^4.5.4"
 pytest = "^9.0.2"
+pytest-xdist = "^3.8.0"
 
 [project]
 name = "project-vortex"

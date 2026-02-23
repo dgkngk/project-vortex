@@ -18,3 +18,16 @@ class BaseSlippage(ABC):
             Series of slippage cost in quote currency (e.g., USDT).
         """
         pass
+
+    def calculate_single(self, trade_qty: float, volume: float, price: float) -> float:
+        """
+        Calculate slippage cost for a single order.
+        Default: wraps inputs into 1-element Series and delegates to calculate().
+        Subclasses may override for efficiency.
+        """
+        idx = pd.RangeIndex(1)
+        trades_s = pd.Series([trade_qty], index=idx)
+        volume_s = pd.Series([volume], index=idx)
+        close_s = pd.Series([price], index=idx)
+        return float(self.calculate(trades_s, volume_s, close_s).iloc[0])
+

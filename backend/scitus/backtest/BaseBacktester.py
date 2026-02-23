@@ -30,14 +30,17 @@ class BaseBacktester(ABC):
         self.bars_per_year = bars_per_year
 
     @abstractmethod
-    def run(self, data: pd.DataFrame, signals: pd.Series, **kwargs) -> BacktestResult:
+    def run(self, data: pd.DataFrame, **kwargs) -> BacktestResult:
         """
         Run the backtest.
-        
+
+        Subclasses define their own required parameters via **kwargs:
+        - VectorizedBacktester: signals (pd.Series)
+        - EventBacktester: strategy (EventStrategy)
+
         Args:
             data: OHLCV DataFrame.
-            signals: Series of trading signals (1, -1, 0).
-            
+
         Returns:
             BacktestResult object containing all metrics and curves.
         """
