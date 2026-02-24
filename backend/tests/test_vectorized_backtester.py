@@ -174,3 +174,40 @@ def test_borrow_cost_only_on_shorts(market_data):
     if short_mask.any():
         assert (borrow_costs[short_mask] > 0).all()
 
+@pytest.mark.unit
+def test_signal_alignment_with_hold(market_data):
+    """Test that 0 signals correctly hold the previous position."""
+    # Data is 10 periods
+    # T0: 1 (Go Long)
+    # T1: 0 (Hold Long)
+    # T2: 0 (Hold Long)
+    # T3: -1 (Go Short)
+    # T4: 0 (Hold Short)
+    # T5: 0 (Hold Short)
+    signals = pd.Series([1, 0, 0, -1, 0, 0, 1, 0, 0, 0], index=market_data.index)
+    
+    backtester = VectorizedBacktester(
+        initial_capital=1000,
+        transaction_cost=0.0
+    )
+    
+    result = backtester.run(market_data, signals=signals)
+    positions = result.positions
+    
+    # Expected alignment (shifted by 1):
+    # T0: flat (0)
+    # T1: long (1) -> held from T0 signal
+    # T2: long (1) -> held from T1 signal (0=hold)
+    # T3: long (1) -> held from T2 signal (0=hold)
+    # T4: short (-1) -> from T3 signal (-1)
+    # T5: short (-1) -> held from T4 signal (0=hold)
+    assert positions.iloc[0] == 0
+    assert positions.iloc[1] == 1
+    assert positions.iloc[2] == 1
+    assert positions.iloc[3] == 1
+    assert positions.iloc[4] == -1
+    assert positions.iloc[5] == -1
+    assert positions.iloc[6] == -1
+    assert positions.iloc[7] == 1 
+    assert positions.iloc[8] == 1
+    assert positions.iloc[9] == 1

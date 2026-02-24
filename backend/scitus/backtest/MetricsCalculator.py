@@ -11,7 +11,9 @@ class MetricsCalculator:
     def calculate(
         returns: pd.Series, 
         equity: pd.Series, 
-        positions: pd.Series, 
+        positions: pd.Series,
+        trades_df: pd.DataFrame = None,
+        costs: Dict[str, pd.Series] = None,
         bars_per_year: int = 365
     ) -> Dict[str, float]:
         """
@@ -41,9 +43,17 @@ class MetricsCalculator:
         metrics["max_drawdown"] = MetricsCalculator._max_drawdown(equity)
         metrics["calmar_ratio"] = MetricsCalculator._calmar(cagr, metrics["max_drawdown"])
         
+        # Cost Metrics
+        total_cost = 0.0
+        if costs:
+            for cost_type, cost_series in costs.items():
+                total_cost += cost_series.sum()
+        metrics["total_costs"] = total_cost
+
         # Trade Stats
-        metrics["win_rate"] = MetricsCalculator._win_rate(returns)
-        metrics["profit_factor"] = MetricsCalculator._profit_factor(returns)
+        metrics["win_rate"] = MetricsCalculator._win_rate(returns, trades_df)
+        metrics["profit_factor"] = MetricsCalculator._profit_factor(returns, trades_df)
+        metrics["avg_trade_duration"] = MetricsCalculator._avg_trade_duration(trades_df)
         
         return metrics
 
@@ -85,30 +95,46 @@ class MetricsCalculator:
         return cagr / max_dd
 
     @staticmethod
-    def _win_rate(returns: pd.Series) -> float:
-        # Vectorized "trades" are tricky to define just from returns.
-        # This is a bar-by-bar win rate, explicitly noted.
-        # For actual *Trade* win rate, we need the trades DataFrame.
-        # Let's stick to positive bars / total bars for generic vector backtests?
-        # OR: The plan implies trade-based. VectorizedBacktester creates a trades DF.
-        # But this function only takes returns?
-        
-        # Let's use Bar Win Rate for now, or assume this is a placeholder 
-        # until we pass the Trades DF into Calculate.
-        
-        # Update: Let's assume returns != 0 are active periods.
+    def _win_rate(returns: pd.Series, trades_df: pd.DataFrame = None) -> float:
+        if trades_df is not None and not trades_df.empty and "pnl" in trades_df.columns:
+            # Use actual trades if available and they have PnL calculated
+            completed_trades = trades_df.dropna(subset=["pnl"])
+            if completed_trades.empty:
+                return 0.0
+            wins = len(completed_trades[completed_trades["pnl"] > 0])
+            return wins / len(completed_trades)
+            
+        # Fallback to bar-by-bar active periods
         active_returns = returns[returns != 0]
         if active_returns.empty:
             return 0.0
         return len(active_returns[active_returns > 0]) / len(active_returns)
 
     @staticmethod
-    def _profit_factor(returns: pd.Series) -> float:
-        gross_profit = returns[returns > 0].sum()
-        gross_loss = abs(returns[returns < 0].sum())
+    def _profit_factor(returns: pd.Series, trades_df: pd.DataFrame = None) -> float:
+        if trades_df is not None and not trades_df.empty and "pnl" in trades_df.columns:
+            # Use actual trades if available and they have PnL calculated
+            completed_trades = trades_df.dropna(subset=["pnl"])
+            gross_profit = completed_trades[completed_trades["pnl"] > 0]["pnl"].sum()
+            gross_loss = abs(completed_trades[completed_trades["pnl"] < 0]["pnl"].sum())
+        else:
+            # Fallback to bar-by-bar
+            gross_profit = returns[returns > 0].sum()
+            gross_loss = abs(returns[returns < 0].sum())
         
         if gross_loss == 0:
              # Return a large finite number to avoid JSON serialization issues with Infinity
             return 100.0 if gross_profit > 0 else 0.0
             
         return gross_profit / gross_loss
+
+    @staticmethod
+    def _avg_trade_duration(trades_df: pd.DataFrame = None) -> float:
+        if trades_df is None or trades_df.empty or "duration" not in trades_df.columns:
+            return 0.0
+            
+        completed_trades = trades_df.dropna(subset=["duration"])
+        if completed_trades.empty:
+            return 0.0
+            
+        return float(completed_trades["duration"].mean())

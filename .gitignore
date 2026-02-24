@@ -12,5 +12,6 @@ test_plots/
 .DS_Store
 .pytest_cache
 .agent/
+.agents/
 .gemini/
 gha-creds-*.json
