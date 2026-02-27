@@ -6,8 +6,9 @@ Welcome to the central documentation hub for Project Vortex. This repository con
 
 ### 🏗️ Engineering & Architecture
 - **[Engineering Guidelines](./engineering-guidelines.md)**: Naming conventions, architectural patterns, logging, and testing standards.
-- **[Tech Stack](./tech-stack.md)**: Detailed breakdown of languages, frameworks, and data stores used.
-- **[Project Diagrams](./project_diagrams.md)**: Visual representations of the system flow and class structures.
+- **[Tech Stack](./architecture/tech-stack.md)**: Detailed breakdown of languages, frameworks, and data stores used.
+- **[Project Diagrams](./architecture/project_diagrams.md)**: Visual representations of the system flow and class structures.
+- **[Architecture Decision Records](./adr/)**: Historical log of critical architectural choices.
 
 ### 📈 Product & Strategy
 - **[Product Definitions](./product-definitions.md)**: Project goals, scope, and the tiered evolutionary levels (Level -1 to Level 5).

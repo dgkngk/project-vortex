@@ -1,0 +1,17 @@
+# Project Vortex
+> A high-throughput Financial Assets ETL Engine and analytics backend.
+
+## Core Files
+- [backend/api/main.py]: Main entry of FastAPI application
+- [backend/etl/main.py]: Base of the ETL pipeline
+- [docs/README.md]: Root of all documentation
+
+## Key Concepts
+- **ETL Architecture**: Uses Extractors for external API (Binance, CoinGecko), Transformers for data processing/technical analysis, Loaders for persisting in InfluxDB or Redis.
+- **Factory Pattern**: The system dynamically loads strategies, extractors and transformers using Python `importlib`.
+- **Trading Engine**: A multi-tiered structure from Data Foundation to Strategy and Execution handles quantitative strategies.
+
+## Docs
+- Read `docs/product-definitions.md` for goal hierarchy.
+- Read `docs/engineering-guidelines.md` for structural guidelines.
+- Read `docs/plans/` for implementation goals.
